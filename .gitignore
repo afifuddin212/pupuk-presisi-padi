@@ -29,3 +29,4 @@ pnpm-debug.log*
 android/
 ios/
 capacitor.config.json.bak
+
