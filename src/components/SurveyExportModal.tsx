@@ -32,7 +32,13 @@ export const SurveyExportModal: React.FC<SurveyExportModalProps> = ({
   points,
   onClearAllPoints,
 }) => {
-  const [webhookUrl, setWebhookUrl] = useState<string>('');
+  const [webhookUrl, setWebhookUrl] = useState<string>(() => {
+    try {
+      return localStorage.getItem('pupuk_presisi_webhook_url') || '';
+    } catch {
+      return '';
+    }
+  });
   const [showWebhookSetting, setShowWebhookSetting] = useState<boolean>(false);
   const [isSending, setIsSending] = useState<boolean>(false);
   const [resultMsg, setResultMsg] = useState<{ success: boolean; text: string } | null>(null);
@@ -40,6 +46,15 @@ export const SurveyExportModal: React.FC<SurveyExportModalProps> = ({
   if (!isOpen) return null;
 
   const dateStr = new Date().toISOString().slice(0, 10);
+
+  const handleWebhookChange = (url: string) => {
+    setWebhookUrl(url);
+    try {
+      localStorage.setItem('pupuk_presisi_webhook_url', url);
+    } catch (e) {
+      console.warn('Gagal menyimpan webhook url ke local storage:', e);
+    }
+  };
 
   const handleShareAll = async () => {
     setIsSending(true);
@@ -200,7 +215,7 @@ export const SurveyExportModal: React.FC<SurveyExportModalProps> = ({
                       type="url"
                       placeholder="https://script.google.com/macros/s/.../exec"
                       value={webhookUrl}
-                      onChange={(e) => setWebhookUrl(e.target.value)}
+                      onChange={(e) => handleWebhookChange(e.target.value)}
                       className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs"
                     />
                     <p className="text-[10px] text-slate-400">
