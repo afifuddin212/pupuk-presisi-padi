@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e" />
+      <stop offset="60%" stop-color="#16a34a" />
+      <stop offset="100%" stop-color="#14532d" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="50%" stop-color="#facc15" />
+      <stop offset="100%" stop-color="#ca8a04" />
+    </linearGradient>
+    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#052e16" flood-opacity="0.4" />
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)" />
+  <path d="M 60 380 Q 256 340 452 400" stroke="#4ade80" stroke-width="8" fill="none" opacity="0.3" stroke-linecap="round"/>
+  <path d="M 40 430 Q 256 390 472 450" stroke="#4ade80" stroke-width="10" fill="none" opacity="0.25" stroke-linecap="round"/>
+  <circle cx="256" cy="270" r="160" stroke="#86efac" stroke-width="4" fill="none" opacity="0.3" stroke-dasharray="12 12" />
+  <circle cx="256" cy="270" r="110" stroke="#bbf7d0" stroke-width="6" fill="none" opacity="0.4" />
+  <g filter="url(#dropShadow)">
+    <path d="M 256 370 C 256 260 256 160 256 90" stroke="#fef08a" stroke-width="8" stroke-linecap="round" />
+    <ellipse cx="230" cy="140" rx="20" ry="34" transform="rotate(-35 230 140)" fill="url(#goldGrad)" />
+    <ellipse cx="220" cy="200" rx="22" ry="36" transform="rotate(-40 220 200)" fill="url(#goldGrad)" />
+    <ellipse cx="218" cy="265" rx="24" ry="38" transform="rotate(-45 218 265)" fill="url(#goldGrad)" />
+    <ellipse cx="225" cy="325" rx="22" ry="35" transform="rotate(-50 225 325)" fill="url(#goldGrad)" />
+    <ellipse cx="282" cy="140" rx="20" ry="34" transform="rotate(35 282 140)" fill="url(#goldGrad)" />
+    <ellipse cx="292" cy="200" rx="22" ry="36" transform="rotate(40 292 200)" fill="url(#goldGrad)" />
+    <ellipse cx="294" cy="265" rx="24" ry="38" transform="rotate(45 294 265)" fill="url(#goldGrad)" />
+    <ellipse cx="287" cy="325" rx="22" ry="35" transform="rotate(50 287 325)" fill="url(#goldGrad)" />
+    <ellipse cx="256" cy="95" rx="18" ry="32" fill="url(#goldGrad)" />
+  </g>
+  <g filter="url(#dropShadow)">
+    <path d="M 256 360 C 220 360 196 390 196 418 C 196 455 256 500 256 500 C 256 500 316 455 316 418 C 316 390 292 360 256 360 Z" fill="#ffffff" />
+    <circle cx="256" cy="412" r="22" fill="#16a34a" />
+    <circle cx="256" cy="412" r="10" fill="#facc15" />
+  </g>
+</svg>
+
