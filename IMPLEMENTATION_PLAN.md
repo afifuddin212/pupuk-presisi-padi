@@ -1,106 +1,93 @@
-# IMPLEMENTATION PLAN & ARSITEKTUR SISTEM (TERREVISI)
+# IMPLEMENTATION PLAN & ARSITEKTUR SISTEM (LENGKAP & TERINTEGRASI)
 ## Aplikasi Android & Web: "Pupuk Presisi Padi" (Kabupaten Lampung Utara)
 
-> **Status Dokumen**: Disetujui & Disesuaikan dengan Komentar Pengguna  
-> **Target Wilayah Studi**: Kabupaten Lampung Utara, Provinsi Lampung  
+> **Status Proyek**: Fase 1–3 SELESAI (Production-Ready Web PWA & GitHub Pages Live), Siap Fase 4 (Capacitor Android APK)  
+> **Target Wilayah Studi**: 23 Kecamatan di Kabupaten Lampung Utara, Provinsi Lampung  
 > **Dasar Regulasi**: Peraturan Menteri Pertanian Republik Indonesia No. 13 Tahun 2022  
-> **Standar UI/UX**: Android Material Design 3, Outdoor High-Contrast, Ergonomi Lapangan 48×48dp  
-> **Teknologi**: React 18 + Vite + TypeScript + Tailwind CSS + Leaflet.js + Capacitor 6 (Android)
+> **Standar UI/UX**: Android Material Design 3, Outdoor High-Contrast, Ergonomi Lapangan 48×48dp, System Bar Safe-Area Insets  
+> **Repositori GitHub**: [github.com/afifuddin212/pupuk-presisi-padi](https://github.com/afifuddin212/pupuk-presisi-padi)  
+> **Demo Publik**: [afifuddin212.github.io/pupuk-presisi-padi](https://afifuddin212.github.io/pupuk-presisi-padi/)  
+> **Stack Teknologi**: React 18 + Vite 6 + TypeScript + Tailwind CSS + Leaflet.js + Turf.js + LocalForage + Capacitor 6
 
 ---
 
-## 1. Ringkasan Eksekutif & Tujuan Proyek
+## 1. Ringkasan Eksekutif & Latar Belakang
 
-Aplikasi **"Pupuk Presisi Padi"** (nama sementara) dikembangkan untuk membantu petani dan penyuluh pertanian lapangan (PPL) menentukan dosis pupuk berimbang secara presisi serta memetakan lokasi lahan sawah secara *offline*.
+Aplikasi **"Pupuk Presisi Padi"** dikembangkan sebagai instrumen digital pendukung petani, penyuluh pertanian lapangan (PPL), dan tim peneliti pertanian dalam menentukan rekomendasi dosis pemupukan berimbang secara presisi berbasis batas wilayah kecamatan dan status hara tanah setempat, sekaligus merekam koordinat geospasial lahan sawah secara *offline*.
 
-Aplikasi ini dibangun menggunakan arsitektur *Hybrid-Ready*:
-1. **Fase Web Demo (PWA)**: Di-*deploy* ke **GitHub Pages** agar dapat segera diakses publik melalui tautan peramban oleh tim peneliti dan pemangku kepentingan untuk pengujian (*review*).
-2. **Fase Native Android APK**: Dikemas menggunakan **Capacitor 6** menjadi file instalasi mandiri (`.apk`) untuk pengujian langsung di sawah tanpa sinyal, dan disiapkan dalam format Android App Bundle (`.aab`) untuk rilis ke **Google Play Store**.
-
----
-
-## 2. Spesifikasi Teknis & Arsitektur Solusi
-
-| Komponen | Pilihan Teknologi | Alasan Pemilihan |
-| :--- | :--- | :--- |
-| **Framework Frontend** | React 18 + Vite + TypeScript + Tailwind CSS | Performa sangat cepat, ukuran *bundle* ringan (<2MB), kompatibel dengan peramban lawas, dan mudah di-export ke Web statis maupun Capacitor Android. |
-| **GIS & Map Engine** | Leaflet.js + Turf.js (Point-in-Polygon) + Tile Caching | Ringan untuk Web & WebView Android, konsumsi RAM rendah di ponsel *entry-level*, rendering GeoJSON cepat, dan mendukung deteksi otomatis posisi pengguna di poligon kecamatan. |
-| **Hardware & Native Bridge** | Capacitor 6 (`@capacitor/core`, `@capacitor/geolocation`, `@capacitor/filesystem`, `@capacitor/share`) | Akses sensor GNSS native tanpa overhead berat, penyimpanan ke Scoped Storage, dan integrasi Android Share Intent (WhatsApp/Bluetooth). |
-| **Penyimpanan Offline** | IndexedDB (LocalForage) + Scoped Storage (`Documents/PupukPresisi/`) | Data riwayat survei dan nama pencatat tersimpan persisten bahkan saat aplikasi ditutup atau tanpa koneksi internet sama sekali. |
-| **Ikonografi & Aset** | Lucide Icons (`lucide-react`) + Logo Resmi (`assets/logo/`) | Kontras tinggi, ukuran vektor SVG tajam dan ringan. |
-| **Hosting Demo** | GitHub Pages (`gh-pages` branch / GitHub Actions) | Gratis, cepat diakses oleh tim peneliti dari tautan publik tanpa perlu instalasi server. |
+### Arsitektur Solusi (*Hybrid-Ready*):
+1. **Web Progressive Web App (PWA) / GitHub Pages**:
+   - Di-*deploy* otomatis via GitHub Actions untuk dapat langsung diakses publik oleh pemangku kepentingan tanpa instalasi server berbayar.
+   - Mendukung mode *Add to Home Screen* di Google Chrome Android dengan tampilan layar penuh (*standalone WebView*).
+2. **Native Android Container (Capacitor 6)**:
+   - Memaketkan aplikasi ke dalam paket aplikasi mandiri (`.apk` / `.aab`).
+   - Beroperasi 100% *offline* di tengah pematang sawah tanpa sinyal internet, memanfaatkan *IndexedDB*, *offline tile caching*, dan *Android Scoped Storage*.
 
 ---
 
-## 3. Landasan Regulasi & Logika Kalkulator Pemupukan (Permentan No. 13/2022)
+## 2. Landasan Regulasi & Formula Kalkulator (Permentan No. 13/2022)
 
-Perhitungan dosis pupuk mengacu secara ketat pada teks resmi **Permentan No. 13 Tahun 2022**:
+Perhitungan rekomendasi dosis pupuk mengacu secara mutlak pada lampiran dan pasal-pasal **Permentan No. 13 Tahun 2022**:
 
 ### A. Kriteria Status Hara Tanah (Pasal 5 & 6)
-Penilaian status hara tanah diklasifikasikan ke dalam 3 kelas:
-1. **Status Rendah**:
-   - Fosfor ($\text{P}_2\text{O}_5$): $< 20\text{ mg}/100\text{ g}$ tanah
-   - Kalium ($\text{K}_2\text{O}$): $< 10\text{ mg}/100\text{ g}$ tanah
-2. **Status Sedang**:
-   - Fosfor ($\text{P}_2\text{O}_5$): $20 - 40\text{ mg}/100\text{ g}$ tanah
-   - Kalium ($\text{K}_2\text{O}$): $10 - 20\text{ mg}/100\text{ g}$ tanah
-3. **Status Tinggi**:
-   - Fosfor ($\text{P}_2\text{O}_5$): $> 40\text{ mg}/100\text{ g}$ tanah
-   - Kalium ($\text{K}_2\text{O}$): $> 20\text{ mg}/100\text{ g}$ tanah
+| Status Hara | Ambang Batas Fosfor ($\text{P}_2\text{O}_5$) | Ambang Batas Kalium ($\text{K}_2\text{O}$) |
+| :--- | :--- | :--- |
+| **Rendah** | $< 20\text{ mg}/100\text{ g}$ tanah | $< 10\text{ mg}/100\text{ g}$ tanah |
+| **Sedang** | $20 - 40\text{ mg}/100\text{ g}$ tanah | $10 - 20\text{ mg}/100\text{ g}$ tanah |
+| **Tinggi** | $> 40\text{ mg}/100\text{ g}$ tanah | $> 20\text{ mg}/100\text{ g}$ tanah |
 
-### B. Mode Input Pengguna & Deteksi Spasial Kecamatan
-1. **Deteksi Spasial Kecamatan Otomatis (Point-in-Polygon)**:
-   - Ketika pengguna mengaktifkan GPS atau memilih titik di peta, sistem menggunakan algoritma spasial *Point-in-Polygon* (PIP) untuk mendeteksi poligon kecamatan tempat pengguna berada.
-   - **Tabel Rekomendasi Resmi Permentan 13/2022**: Di dalam **Lampiran Permentan No. 13 Tahun 2022**, Kementerian Pertanian memang telah menyusun tabel baku rekomendasi dosis pupuk per kecamatan untuk seluruh wilayah Indonesia.
-   - Seluruh 23 kecamatan di Kabupaten Lampung Utara sudah tercakup di file spasial kita (`rekomendasi_pupuk_padi_lampura.geojson`) dengan nilai rekomendasi dasar ($250\text{ kg Urea/ha}$, status P Rendah, K Tinggi).
-   - *Fallback*: Jika GPS mati atau berada di luar batas, disediakan *dropdown* pemilih kecamatan manual.
-
-2. **Mode Kualitatif**: Pengguna memilih langsung status hara P dan K (Rendah / Sedang / Tinggi).
-3. **Mode Kuantitatif (PUTS)**: Pengguna memasukkan angka hasil analisis uji tanah ($\text{P}_2\text{O}_5$ dan $\text{K}_2\text{O}$ dalam $\text{mg}/100\text{ g}$ tanah), lalu sistem mengonversinya secara otomatis ke status kualitatif sesuai ambang batas Permentan.
-4. **Target Dosis Urea Dasar**:
-   - Default terisi otomatis dari data kecamatan ($250\text{ kg/ha}$).
-   - Pengguna tetap dapat mengubah ke $300\text{ kg/ha}$ atau $350\text{ kg/ha}$ jika memiliki target hasil panen yang lebih tinggi (5–7 ton/ha).
+### B. Mode Input Data Hara
+1. **Mode Kualitatif**: Pengguna memilih langsung status hara (Rendah / Sedang / Tinggi) berdasarkan pengamatan visual atau rekapitulasi data BPP.
+2. **Mode Kuantitatif (PUTS)**: Pengguna memasukkan nilai numerik dari analisis Perangkat Uji Tanah Sawah (PUTS), kemudian sistem mengonversinya secara otomatis ke kelas hara Permentan.
+3. **Deteksi Spasial Kecamatan (Turf.js PIP)**:
+   - Ketika titik lokasi diaktifkan (via GPS atau tap manual di peta), sistem mendeteksi poligon kecamatan di Lampung Utara (`rekomendasi_pupuk_padi_lampura.geojson`).
+   - Nilai baseline rekomendasi Permentan terisi otomatis ($250\text{ kg Urea/ha}$, P: Rendah, K: Tinggi).
+   - Tersedia opsi pemilihan target panen Urea: $250\text{ kg/ha}$, $300\text{ kg/ha}$, atau $350\text{ kg/ha}$.
 
 ### C. Output Rekomendasi Pemupukan (Pasal 8 & 9)
-* **Paket Pupuk Tunggal** (per hektar per musim):
+* **Paket Pupuk Tunggal (kg/ha/musim)**:
   - **Fosfor (SP-36)**: Rendah = $100\text{ kg/ha}$, Sedang = $75\text{ kg/ha}$, Tinggi = $50\text{ kg/ha}$.
   - **Kalium (KCl)**: Rendah = $100\text{ kg/ha}$, Sedang/Tinggi = $50\text{ kg/ha}$.
-  - **Urea**: Sesuai target hasil / kecamatan ($250 / 300 / 350\text{ kg/ha}$).
-* **Paket Pupuk Majemuk** (Substitusi formula NPK 15-10-12 + Urea):
+  - **Urea**: Sesuai target hasil ($250 / 300 / 350\text{ kg/ha}$).
+* **Paket Pupuk Majemuk (Substitusi NPK 15-10-12 + Urea)**:
   - **P Rendah**: $375\text{ kg NPK 15-10-12} + (125 / 175 / 225)\text{ kg Urea}$.
   - **P Sedang**: $300\text{ kg NPK 15-10-12} + (150 / 200 / 250)\text{ kg Urea}$.
   - **P Tinggi**: $250\text{ kg NPK 15-10-12} + (175 / 225 / 275)\text{ kg Urea}$.
 
 > [!IMPORTANT]
-> **CATATAN PENTING**: Di setiap layar hasil rekomendasi, pop-up peta, dan dokumen ekspor, ditampilkan peringatan:  
-> *"Konsultasikan hasil ini dengan penyuluh (PPL) setempat."*
+> **CATATAN PENTING**: Di setiap kartu hasil rekomendasi, pop-up poligon, dan ekspor data, tercantum teks wajib:  
+> *"CATATAN: Rekomendasi di atas merupakan acuan resmi Permentan 13/2022. Konsultasikan dengan penyuluh (PPL) setempat untuk kondisi riil lahan."*
 
 ---
 
-## 4. Arsitektur Sistem & Alur Kerja (Mermaid)
+## 3. Arsitektur Sistem & Alur Pengguna
 
-### A. Alur Pengguna (*User Flow Diagram*)
 ```mermaid
 flowchart TD
-    Start(["Mulai Aplikasi (Offline Ready)"]) --> Init["Inisialisasi Persistent Storage<br/>& Muat Vektor Lokal (assets/base-data)"]
+    Start(["Mulai Aplikasi (Offline Ready)"]) --> Init["Inisialisasi Persistent Storage (IndexedDB)<br/>& Muat Vektor GeoJSON Lokal"]
     Init --> MainMap["Layar Utama Peta (Fokus Default: Lampung Utara)"]
 
     %% Deteksi Lokasi & Kecamatan
-    MainMap --> LocCheck{"Deteksi Koordinat (GPS / Tap)"}
+    MainMap --> LocCheck{"Deteksi Koordinat (GPS / Tap Manual)"}
     LocCheck --> PIP["Algoritma Spasial Point-in-Polygon (Turf.js)"]
     PIP --> KecFound["Otomatis Kenali Kecamatan & Muat Rekomendasi Dasar Permentan"]
 
     %% Cabang Peta & Layer
     MainMap --> ActLayer["Buka Panel Layer & Legenda"]
-    ActLayer --> ToggleVec["Aktifkan/Nonaktifkan Layer Vektor GeoJSON<br/>(Baku Sawah, SPT, Kesesuaian, Inasoilagro)"]
+    ActLayer --> ToggleVec["Aktifkan/Nonaktifkan Layer Vektor GeoJSON<br/>(Inasoilagro, Baku Sawah, SPT, Kesesuaian, Batas Wilayah)"]
     ActLayer --> CacheMap["Simpan Cache Basemap Satelit (Jika Ada Sinyal)"]
     ToggleVec --> MainMap
     CacheMap --> MainMap
 
+    %% Pop-up Poligon Interaktif
+    MainMap --> TapPoly["Ketuk Poligon Kecamatan di Peta"]
+    TapPoly --> PolyPopup["Tampilkan Pop-up Multi-Layer Vektor:<br/>1. Status Hara & Dosis Permentan 13/2022<br/>2. LBS, Kesesuaian Lahan, & SPT<br/>3. Titik Koordinat & Tombol 'Buka Kalkulator'"]
+    PolyPopup --> OpenCalcFromPoly["Pre-fill Kecamatan & Buka Kalkulator"]
+
     %% Cabang Kalkulator Pemupukan
     MainMap --> OpenCalc["Buka Bottom Sheet: Kalkulator Pupuk"]
-    OpenCalc --> SetKec["Kecamatan Terdeteksi: Tampilkan Baseline Urea Permentan"]
-    SetKec --> ChooseMode{"Pilih Mode Input"}
+    OpenCalcFromPoly --> OpenCalc
+    OpenCalc --> ChooseMode{"Pilih Mode Input"}
 
     ChooseMode -->|"Kualitatif"| InputQual["Pilih Status Hara Langsung<br/>P & K: Rendah / Sedang / Tinggi"]
     ChooseMode -->|"Kuantitatif (PUTS)"| InputQuan["Input Nilai Uji Tanah (mg/100g)<br/>P2O5 & K2O"]
@@ -120,170 +107,129 @@ flowchart TD
     StoreLocal --> MainMap
 
     %% Interaksi Titik & Ekspor Terpadu
-    MainMap --> BatchExport["Tombol Tunggal: 'Kirim Data'"]
+    MainMap --> BatchExport["Tombol Tunggal: 'KIRIM DATA'"]
     BatchExport --> ProcessAll["Paketkan Seluruh Titik Survei Tersimpan"]
     ProcessAll --> SendDual["1. Webhook Otomatis ke Google Sheets (Saat Online)<br/>2. Android Share Intent (Kirim CSV/GeoJSON via WhatsApp/Drive)"]
 ```
 
 ---
 
-## 5. Desain Antarmuka Pengguna (ASCII Wireframes)
+## 4. Rincian Fitur & Komponen yang Telah Diimplementasikan
 
-### Layar 1: Tampilan Utama Peta (*Main Map Canvas & Floating HUD*)
-```text
-+-------------------------------------------------------------+  ▲
-| [KEMENTAN] [HITI] [ICARE]                   [Sun/Moon]  [=] |  │ Top Safe Area
-+-------------------------------------------------------------+  ▼ env(safe-area-inset-top)
-| [GPS: AKTIF | ±3.2m]                      [Kompas: N ▲]     |  <- Floating HUD Pill
-|                                                             |
-|                       _.-''''-._                            |
-|                     .'          '.                          |
-|                    /   POLIGON    \                         |
-|                   | LAMPUNG UTARA  |                        |
-|                    \   (LAYER)    /                         |
-|                     '.          .'                          |
-|                       '-.____.-'                            |
-|                                                             |
-|                          (X) <- [Titik Rekomendasi Tersimpan]
-|                                                             |
-|                              [+]                            |
-|                              [-] Zoom Controls              |
-|                                                             |
-|                              [ (O) ] GPS Recenter FAB (54dp)|
-|                              [ (L) ] Layer & Legenda FAB    |
-| [Skala: |== 50m ==| ]        [ (C) ] Kalkulator Pupuk FAB   |
-+-------------------------------------------------------------+  ▲
-|  Kec. Bukit Kemuning | -4.83645 S, 104.59337 E | Terdeteksi |  │ Bottom Bar
-+-------------------------------------------------------------+  ▼ env(safe-area-inset-bottom)
-```
+### A. Tampilan Peta Utama & Floating HUD (`src/components/FloatingHUD.tsx` & `MapView.tsx`)
+1. **Peta Leaflet Tanpa Tombol Tumpang Tindih**:
+   - Kontrol *zoom* bawaan Leaflet di kanan atas dinonaktifkan.
+   - Kontrol perbesar/perkecil (`+` / `-`) dipindahkan ke *Floating Action Button (FAB) stack* di sisi kanan bawah.
+   - Skala grafis metrik ditempatkan rapi di kiri bawah.
+2. **Manajemen Daya Baterai Hardware GNSS (*Battery Governance*)**:
+   - Tombol toggle status GPS: Petani dapat mematikan GPS saat sedang menganalisis data untuk menghemat konsumsi baterai di bawah terik matahari.
+   - Status akurasi GPS ditampilkan secara *real-time* dalam satuan meter ($\pm 3.2\text{ m}$).
+3. **Kompas & Tombol "Lokasi Saya"**:
+   - Tombol kompas terhubung dengan sensor rotasi orientasi perangkat (`deviceorientation`).
+   - Mengetuk tombol kompas seketika memusatkan (*flyTo*) kamera peta ke koordinat GPS terkini.
+4. **Pill Informasi Wilayah Terdeteksi**:
+   - Pill di bagian bawah layar menampilkan kecamatan aktif.
+   - Dilengkapi tombol chip **"Lihat Detail"** untuk membuka pop-up poligon dan tombol dismiss `[X]`.
 
-### Layar 2: Panel Kalkulator Pemupukan dengan Deteksi Kecamatan
-```text
-+-------------------------------------------------------------+
-|                         [   ===   ]                         |  <- Drag Handle
-| KALKULATOR PEMUPUKAN PADI SAWAH                     [ ? ]   |  <- Tombol Bantuan
-+-------------------------------------------------------------+
-| LOKASI KECAMATAN (PERMENTAN 13/2022):                       |
-| [📍 Kec. Bukit Kemuning, Kab. Lampung Utara             v ] |  <- Auto-detected (bisa diubah)
-+-------------------------------------------------------------+
-| MODE ANALISIS TANAH:                                        |
-| [ (•) Mode Kualitatif ]     [ ( ) Mode Kuantitatif (PUTS) ] |  <- Segmented Toggle (48dp)
-+-------------------------------------------------------------+
-| [MODE KUALITATIF]:                                          |
-| 1. Status Hara Fosfor (P):                                  |
-|    ( ) Rendah          (•) Sedang          ( ) Tinggi       |
-| 2. Status Hara Kalium (K):                                  |
-|    (•) Rendah          ( ) Sedang          ( ) Tinggi       |
-|                                                             |
-| [MODE KUANTITATIF (PUTS)]:                                  |
-| 1. Kadar P2O5 (mg/100g): [  28.5  ] -> Status: SEDANG (Otomatis)
-| 2. Kadar K2O  (mg/100g): [   8.2  ] -> Status: RENDAH (Otomatis)
-|                                                             |
-| TARGET DOSIS UREA DASAR (PERMENTAN 13/2022):                |
-| [ (•) 250 kg/ha (Kecamatan) ] [ ( ) 300 kg/ha ] [ ( ) 350 kg/ha ]
-+-------------------------------------------------------------+
-| HASIL REKOMENDASI DOSIS PER HEKTAR (1 MUSIM TANAM):         |
-|                                                             |
-| +-- [OPSI A] PAKET TUNGGAL -------------------------------+ |
-| | • Urea  : 250 kg/ha                                     | |
-| | • SP-36 :  75 kg/ha                                     | |
-| | • KCl   : 100 kg/ha                                     | |
-| +---------------------------------------------------------+ |
-| +-- [OPSI B] PAKET MAJEMUK (SUBSTITUSI NPK 15-10-12) -----+ |
-| | • NPK 15-10-12 : 300 kg/ha                              | |
-| | • Urea Tambahan: 150 kg/ha                              | |
-| +---------------------------------------------------------+ |
-|                                                             |
-| ⚠️ CATATAN:                                                 |
-| "Konsultasikan hasil ini dengan penyuluh (PPL) setempat."   |
-|                                                             |
-| FORM PEREKAMAN TITIK LAPANGAN:                              |
-| Nama Pencatat : [ Budi Santoso (PPL)                    ]   |
-| Titik Lokasi  : [X] GPS Device (-4.83645 S, 104.59337 E)    |
-|                 [ ] Manual Pick dari Peta                   |
-| Waktu Catat   : 06 Nov 2026, 16:30 WIB (Otomatis)           |
-|                                                             |
-| [ SIMPAN REKOMENDASI KE PETA ]  (Primary Button 54dp, Green)|
-+-------------------------------------------------------------+
-```
+### B. Pop-up Informasi Spasial Multi-Vector (`src/components/PolygonInfoPopup.tsx`)
+1. **Highlight Bersih & Bebas Kotak Hitam**:
+   - Menggantikan tooltip hitam Leaflet yang mengganggu dengan *golden boundary stroke* (`#facc15`, *weight* 3.5, *fillOpacity* 0.4).
+2. **Dinamis Sesuai Layer Vektor yang Aktif**:
+   - Menampilkan *indicator strip* berisi daftar layer yang sedang menyala beserta titik warna legendanya.
+   - **Inasoilagro**: Kartu status P & K, dosis paket tunggal, paket majemuk, serta data komoditas sekunder (Jagung & Kedelai).
+   - **Lahan Baku Sawah (LBS)**: Status sawah beririgasi aktif.
+   - **Kesesuaian Lahan Padi**: Kelas S1 (Sangat Sesuai).
+   - **Satuan Peta Tanah (SPT)**: Ordo dominan (Aluvial & Podsolik Merah Kuning).
+   - **Batas Administrasi**: Konfirmasi nama Kecamatan, Kabupaten Lampung Utara, Provinsi Lampung.
+3. **Aksi Cepat**: Tombol *"Buka Kalkulator Kecamatan Ini"* langsung mem-prefill data ke lembar kalkulator.
+
+### C. Pemilihan Lokasi Manual (*Manual Field Location Pick*)
+- Pengguna dapat mengetuk opsi *"Manual Pick dari Peta"* di kalkulator.
+- Lembar kalkulator akan mengecil, memungkinkan pengguna mengetuk pematang sawah spesifik di atas peta.
+- Marker pin khusus berwarna oranye dengan animasi *bounce* akan menandai titik yang dipilih secara visual.
+
+### D. Ekspor & Sinkronisasi Data Terpadu (`src/components/SurveyExportModal.tsx`)
+1. **Kirim Seluruh Titik Sekaligus (*Batch Share*)**:
+   - Menghasilkan berkas `Survei_Pupuk_Presisi_<tanggal>.csv` (format tabel Excel) dan `Survei_Pupuk_Presisi_<tanggal>.geojson` (format standar SIG).
+   - Memanggil `navigator.share()` bawaan sistem operasi sehingga pengguna tinggal memilih WhatsApp / Google Drive / Email.
+2. **Webhook Google Sheets Otomatis**:
+   - Sinkronisasi data lapangan ke spreadsheet tim peneliti via Google Apps Script (lihat Bab 6).
+   - URL webhook otomatis tersimpan permanen di `localStorage` perangkat.
 
 ---
 
-## 6. Rencana Eksekusi Bertahap (Milestones)
+## 5. Status Milestone Proyek
 
-### Fase 1: Setup Core & Web Demo (GitHub Pages Ready)
-- [ ] Inisialisasi proyek: Vite + React 18 + TypeScript + Tailwind CSS + Lucide Icons + Leaflet + Turf.js.
-- [ ] Deteksi otomatis kecamatan via *Point-in-Polygon* dari koordinat pengguna.
-- [ ] Implementasi kalkulator Permentan No. 13/2022 (Mode Kualitatif & Kuantitatif PUTS + CATATAN PPL).
-- [ ] Antarmuka peta responsif: Floating HUD, kontrol zoom, kompas, dan switch Dark/Light mode.
-- [ ] Penyusunan Modal Bantuan edukatif berdasar pasal-pasal Permentan.
-
-### Fase 2: GIS Offline, Perekaman Titik & Tombol "Kirim Data"
-- [ ] Render poligon tematik `rekomendasi_pupuk_padi_lampura.geojson` (23 kecamatan).
-- [ ] Checklist layer GeoJSON dinamis dan fitur *tile caching*.
-- [ ] Form perekaman titik: Nama Pencatat, auto timestamp, opsi GPS / manual tap.
-- [ ] Tombol terpadu **"Kirim Data"** (ekspor batch CSV/GeoJSON + webhook Google Sheets + Share Intent).
-
-### Fase 3: Rilis Web Demo di GitHub Pages
-- [ ] Konfigurasi `vite.config.ts` (`base: './'`).
-- [ ] Setup deploy otomatis GitHub Actions / `gh-pages`.
-- [ ] Uji coba akses publik oleh tim peneliti melalui ponsel dan browser desktop.
-
-### Fase 4: Build Android APK (Capacitor) & Google Play Store
-- [ ] Inisialisasi `@capacitor/core` dan `@capacitor/android`.
-- [ ] Konfigurasi `AndroidManifest.xml` (akses lokasi presisi `ACCESS_FINE_LOCATION`, `largeHeap`).
-- [ ] Optimasi daya baterai GNSS (sensor mati saat background / toggle OFF).
-- [ ] Generate file `.apk` mandiri untuk *sideloading* di lapangan.
-- [ ] Konfigurasi Keystore & ProGuard untuk rilis `.aab` ke Google Play Store.
+| Milestone | Ruang Lingkup | Status |
+| :--- | :--- | :--- |
+| **Fase 1** | Setup Vite React TS, Logika Permentan 13/2022, Point-in-Polygon, Ergonomi MD3 (48dp) | ✅ **SELESAI** |
+| **Fase 2** | GIS Offline, Poligon Lampung Utara, Multi-Layer Popup, Manual Pick, IndexedDB, Kirim Data | ✅ **SELESAI** |
+| **Fase 3** | Deployment Pipeline GitHub Pages via GitHub Actions (`deploy.yml`, Node 22, enablement) | ✅ **SELESAI & LIVE** |
+| **Fase 4** | Capacitor 6 Android Container, Build Debug APK, Scoped Storage, Play Store Compliance | ⏳ **SIAP DIJALANKAN** |
 
 ---
 
-## 8. Panduan Lengkap Hosting Web Demo ke GitHub Pages (Akses Tim Peneliti)
+## 6. Panduan Integrasi Google Sheets Webhook
 
-Agar tim peneliti dan pemangku kepentingan dapat mengakses aplikasi ini secara online dari HP atau laptop tanpa perlu menginstal aplikasi terlebih dahulu, ikuti langkah-langkah berikut:
+Untuk menghubungkan tombol *"KIRIM DATA"* ke Google Sheets peneliti:
+1. Buat Google Spreadsheet baru di Google Drive.
+2. Klik **Extensions** ➔ **Apps Script**, tempel kode berikut:
+```javascript
+function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        "ID Titik", "Waktu Catat", "Pencatat", "Latitude", "Longitude", 
+        "Akurasi (m)", "Kecamatan", "Status P", "Status K", 
+        "Target Urea (kg/ha)", "Urea Tunggal", "SP-36 Tunggal", "KCl Tunggal", 
+        "NPK 15-10-12", "Urea Tambahan", "Sumber GPS", "Catatan"
+      ]);
+    }
 
-### Langkah 1: Buat Repository Baru di GitHub
-1. Buka [GitHub.com](https://github.com/) dan masuk ke akun Anda.
-2. Klik tombol **New** (Buat Repository Baru).
-3. Beri nama repository, misalnya: `pupuk-presisi-padi`.
-4. Pilih opsi **Public** agar dapat diakses oleh tim lain, lalu klik **Create repository** (jangan centang Add README karena kode lokal sudah lengkap).
+    var data = JSON.parse(e.postData.contents);
+    var features = data.features || [];
 
-### Langkah 2: Hubungkan Folder Lokal dan Unggah (Push) ke GitHub
-Buka terminal PowerShell di folder proyek ini (`c:\Projects-antigravity\pupuk-presisi`), lalu jalankan baris perintah berikut secara berurutan:
+    features.forEach(function(f) {
+      var p = f.properties;
+      var geom = f.geometry;
+      sheet.appendRow([
+        p.id, p.waktu, p.surveyor, geom.coordinates[1], geom.coordinates[0],
+        p.akurasi_m || "", p.kecamatan, p.p_status, p.k_status,
+        p.target_urea, p.urea_tunggal, p.sp36_tunggal, p.kcl_tunggal,
+        p.npk_majemuk, p.urea_majemuk, p.sumber, p.catatan || ""
+      ]);
+    });
 
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", count: features.length }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+```
+3. Klik **Deploy** ➔ **New deployment** ➔ Pilih jenis **Web app**:
+   - **Execute as**: `Me`
+   - **Who has access**: `Anyone`
+4. Salin URL Web App yang dihasilkan, lalu masukkan ke dalam modal Kirim Data di aplikasi.
+
+---
+
+## 7. Langkah Fase 4: Build Native Android APK (Capacitor)
+
+Ketika tim siap mengemas aplikasi menjadi berkas `.apk` mandiri:
 ```powershell
-# 1. Inisialisasi Git lokal (jika belum)
-git init
+# 1. Pastikan build web produksi terbaru sudah tersedia
+npm.cmd run build
 
-# 2. Tambahkan semua file dan buat commit awal
-git add .
-git commit -m "feat: inisialisasi aplikasi web pupuk presisi padi lampung utara"
+# 2. Inisialisasi Capacitor Android
+npx.cmd cap add android
 
-# 3. Ubah nama branch utama ke 'main'
-git branch -M main
+# 3. Sinkronisasikan berkas dist/ ke project Android
+npx.cmd cap sync android
 
-# 4. Hubungkan remote repository GitHub Anda (ganti <username-anda> dengan username GitHub Anda)
-git remote add origin https://github.com/<username-anda>/pupuk-presisi-padi.git
-
-# 5. Unggah kode ke GitHub
-git push -u origin main
+# 4. Buka proyek di Android Studio untuk kompilasi APK
+npx.cmd cap open android
 ```
-
-### Langkah 3: Konfigurasi GitHub Pages
-1. Di halaman repository GitHub Anda, klik tab **Settings** (di menu atas).
-2. Di sidebar sebelah kiri, klik menu **Pages**.
-3. Pada bagian **Build and deployment**:
-   - Di menu dropdown **Source**, pilih **GitHub Actions**.
-4. GitHub Actions akan secara otomatis menjalankan alur kerja dari file [`.github/workflows/deploy.yml`](file:///c:/Projects-antigravity/pupuk-presisi/.github/workflows/deploy.yml) yang telah kita siapkan.
-5. Tunggu sekitar 1–2 menit hingga proses build selesai.
-
-### Langkah 4: Bagikan Tautan Web Demo ke Tim Peneliti
-Setelah proses build selesai, halaman demo akan aktif di tautan publik:
-```text
-https://<username-anda>.github.io/pupuk-presisi-padi/
-```
-* **Kelebihan untuk Pengujian**:
-  - Tim peneliti dapat langsung membuka tautan tersebut dari browser ponsel (Chrome/Safari) maupun laptop.
-  - Tampilan akan langsung responsif menyerupai aplikasi Android.
-  - Tim dapat mencoba menghitung dosis pupuk, mengetuk poligon kecamatan Lampung Utara, dan mencoba fitur ekspor survei secara langsung untuk memberikan masukan.
-
+Pada Android Studio, pilih menu **Build** ➔ **Build Bundle(s) / APK(s)** ➔ **Build APK(s)** untuk menghasilkan berkas instalasi lapangan.
