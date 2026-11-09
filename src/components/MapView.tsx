@@ -109,6 +109,21 @@ export const MapView: React.FC<MapViewProps> = ({
       }
     });
 
+    // Kontrol Visibilitas Label Berdasarkan Level Zoom (Mencegah Label Bertumpuk saat Zoom-Out)
+    const updateZoomClass = () => {
+      if (!mapContainerRef.current) return;
+      const z = map.getZoom();
+      if (z < 11) {
+        mapContainerRef.current.classList.add('map-zoom-low');
+      } else {
+        mapContainerRef.current.classList.remove('map-zoom-low');
+      }
+    };
+
+    map.on('zoomend', updateZoomClass);
+    map.on('zoom', updateZoomClass);
+    updateZoomClass();
+
     mapInstanceRef.current = map;
     (window as any)._leafletMapInstance = map;
 
@@ -205,12 +220,13 @@ export const MapView: React.FC<MapViewProps> = ({
       onEachFeature: (feature, polyLayer) => {
         const props = feature.properties || {};
         const kec = props.KECAMATAN || 'Kecamatan';
+        const isSelected = selectedKecamatan && kec.toUpperCase() === selectedKecamatan.toUpperCase();
 
-        // Tampilkan label nama kecamatan permanen di tengah poligon (Outdoor high-contrast)
+        // Tampilkan label nama kecamatan di tengah poligon (Outdoor high-contrast)
         polyLayer.bindTooltip(kec, {
           permanent: true,
           direction: 'center',
-          className: 'kecamatan-map-label',
+          className: isSelected ? 'kecamatan-map-label active-label' : 'kecamatan-map-label',
         });
 
         // Interaksi klik: highlight & pop-up informatif
