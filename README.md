@@ -14,7 +14,6 @@ Aplikasi ini dikembangkan mengacu pada standar resmi **Peraturan Menteri Pertani
 ## 📌 Tautan Penting
 * **Live Demo Aplikasi (GitHub Pages)**: [https://afifuddin212.github.io/pupuk-presisi-padi/](https://afifuddin212.github.io/pupuk-presisi-padi/)
 * **Repositori GitHub**: [https://github.com/afifuddin212/pupuk-presisi-padi](https://github.com/afifuddin212/pupuk-presisi-padi)
-* **Dokumen Rencana Arsitektur Detail**: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 * **Ringkasan Regulasi Permentan**: [rekomendasi_pemupukan_padi_berdasarkan_permentan_no_13_tahun_2022.md](rekomendasi_pemupukan_padi_berdasarkan_permentan_no_13_tahun_2022.md)
 
 ---
