@@ -114,11 +114,11 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 <div>
                   <h5 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Calculator className="w-3.5 h-3.5 text-emerald-600" />
+                    <Calculator className="w-3.5 h-3.5 text-amber-500" />
                     Buka Kalkulator Pemupukan
                   </h5>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    Ketuk tombol hijau kalkulator besar di pojok kanan bawah layar untuk membuka panel kalkulator.
+                    Ketuk tombol besar berwarna kuning keemasan (bertuliskan <strong>HITUNG</strong>) di pojok kanan bawah layar untuk membuka panel kalkulator.
                   </p>
                 </div>
               </div>

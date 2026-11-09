@@ -60,20 +60,28 @@ export const FloatingHUD: React.FC<FloatingHUDProps> = ({
       <div className="w-full flex flex-col gap-2 pointer-events-auto" style={{ paddingTop: 'var(--sat)' }}>
         {/* Main Logo & Global Action Pill */}
         <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl px-3 py-2 shadow-lg border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
-          {/* Logo Brands */}
-          <div className="flex items-center gap-2 overflow-hidden">
+          {/* Logo Brands & App Title */}
+          <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
             <img 
               src="./logo/app-icon.svg" 
               alt="App Icon" 
-              className="w-8 h-8 rounded-xl shadow-sm border border-emerald-500/20 shrink-0" 
+              className="w-8 h-8 rounded-xl shadow-xs border border-emerald-500/20 shrink-0" 
             />
-            <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-200 dark:border-slate-700 shrink-0">
-              <img src="./logo/logo-kementan.jpg" alt="Kementan" className="h-5 sm:h-6 w-auto object-contain rounded" title="Kementerian Pertanian" />
-              <img src="./logo/logo-hiti.png" alt="HITI" className="h-5 sm:h-6 w-auto object-contain rounded" title="Himpunan Ilmu Tanah Indonesia" />
-              <img src="./logo/logo-icare.png" alt="ICARE" className="h-5 sm:h-6 w-auto object-contain rounded" title="ICARE" />
+            {/* Institusi Logos */}
+            <div className="flex items-center gap-1 pl-1 border-l border-slate-200 dark:border-slate-700 shrink-0">
+              <img src="./logo/logo-kementan.jpg" alt="Kementan" className="h-5 sm:h-5.5 w-auto object-contain rounded shadow-2xs" title="Kementerian Pertanian" />
+              <img src="./logo/logo-hiti.png" alt="HITI" className="h-5 sm:h-5.5 w-auto object-contain rounded shadow-2xs" title="Himpunan Ilmu Tanah Indonesia" />
+              <img src="./logo/logo-icare-bgwhite.png" alt="ICARE" className="h-5 sm:h-5.5 w-auto object-contain rounded bg-white p-0.5 shadow-2xs" title="ICARE" />
             </div>
-            <div className="hidden xs:block text-[11px] font-bold text-emerald-800 dark:text-emerald-400 truncate pl-1">
-              Lampung Utara
+
+            {/* Judul Aplikasi */}
+            <div className="flex flex-col min-w-0 pl-1.5 border-l border-slate-200 dark:border-slate-700">
+              <h1 className="text-[11.5px] sm:text-xs font-black text-slate-900 dark:text-white leading-tight truncate">
+                Rekomendasi Pemupukan Presisi Padi
+              </h1>
+              <span className="text-[9.5px] font-bold text-emerald-700 dark:text-emerald-400 tracking-wider uppercase truncate">
+                Kabupaten Lampung Utara
+              </span>
             </div>
           </div>
 
