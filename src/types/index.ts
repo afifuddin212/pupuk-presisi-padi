@@ -37,6 +37,7 @@ export interface SurveyPoint {
   accuracy?: number;
   source: 'gps' | 'manual';
   kecamatan: string;
+  luasPetak?: number; // Luas petak sawah dalam hektar (misal: 0.25, 0.5, 1 ha)
   pStatus: HaraStatus;
   kStatus: HaraStatus;
   p2o5Kuantitatif?: number;

@@ -1,6 +1,6 @@
 # Rekomendasi Pemupukan untuk Tanaman Padi Sawah Berdasarkan Permentan No. 13 Tahun 2022
 
-Dokumen ini disusun secara ketat berdasarkan **Peraturan Menteri Pertanian Republik Indonesia Nomor 13 Tahun 2022 tentang Penggunaan Dosis Pupuk N, P, K, untuk Padi, Jagung dan Kedelai pada Lahan Sawah**.
+Dokumen ini disusun berdasarkan **Peraturan Menteri Pertanian Republik Indonesia Nomor 13 Tahun 2022 tentang Penggunaan Dosis Pupuk N, P, K, untuk Padi, Jagung dan Kedelai pada Lahan Sawah**.
 
 ---
 

@@ -130,11 +130,12 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 <div>
                   <h5 className="font-bold text-slate-900 dark:text-white">
-                    Pilih Mode Input Status Hara Tanah
+                    Pilih Metode Input Status Hara Tanah &amp; Luas Lahan
                   </h5>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    • <strong>Mode Kualitatif</strong>: Pilih langsung kategori Rendah, Sedang, atau Tinggi.<br />
-                    • <strong>Mode Kuantitatif (PUTS)</strong>: Masukkan nilai angka hasil uji tanah (P₂O₅ &amp; K₂O dalam mg/100g), sistem akan mengonversinya secara otomatis.
+                    • <strong>Metode Kualitatif (PUTS dan PUTK)</strong>: Pilih langsung kategori Rendah, Sedang, atau Tinggi berdasarkan uji cepat bagan warna.<br />
+                    • <strong>Metode Kuantitatif (Laboratorium)</strong>: Masukkan angka hasil uji laboratorium (P₂O₅ &amp; K₂O dalam mg/100g).<br />
+                    • <strong>Luas Petak Sawah (ha)</strong>: Tentukan luas petak sawah untuk menghitung kebutuhan pupuk riil petani.
                   </p>
                 </div>
               </div>
@@ -146,10 +147,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 <div>
                   <h5 className="font-bold text-slate-900 dark:text-white">
-                    Lihat Rekomendasi Dosis (Tunggal vs Majemuk)
+                    Lihat Rekomendasi Dosis (Sesuai Luas Petak &amp; per Hektar)
                   </h5>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    Aplikasi menampilkan 2 opsi paket pemupukan per hektar:<br />
+                    Aplikasi menampilkan 2 opsi paket pemupukan (dosis kebutuhan petak petani dan dosis baku per hektar):<br />
                     • <strong>Paket Tunggal</strong>: Urea + SP-36 + KCl.<br />
                     • <strong>Paket Majemuk</strong>: Substitusi NPK 15-10-12 + Urea tambahan.
                   </p>

@@ -52,6 +52,9 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
   const [p2o5Val, setP2o5Val] = useState<string>('');
   const [k2oVal, setK2oVal] = useState<string>('');
 
+  // Luas Petak Sawah (Hektar)
+  const [luasPetak, setLuasPetak] = useState<string>('1');
+
   // Target Dosis Urea Dasar
   const [targetUrea, setTargetUrea] = useState<number>(250);
   
@@ -95,6 +98,8 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
 
   // Hasil Perhitungan
   const hasil = hitungRekomendasiPupuk(pStatus, kStatus, targetUrea);
+  const luasVal = parseFloat(luasPetak);
+  const luas = !isNaN(luasVal) && luasVal > 0 ? luasVal : 1;
 
   if (!isOpen) return null;
 
@@ -109,6 +114,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
       accuracy: gpsAccuracy,
       source: useCurrentGps ? 'gps' : 'manual',
       kecamatan: selectedKecamatan,
+      luasPetak: luas,
       pStatus,
       kStatus,
       p2o5Kuantitatif: p2o5Val ? parseFloat(p2o5Val) : undefined,
@@ -194,33 +200,35 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
             </select>
           </div>
 
-          {/* Toggle Mode Input (Kualitatif vs Kuantitatif) */}
+          {/* Toggle Mode Input (Kualitatif: PUTS dan PUTK vs Kuantitatif: Laboratorium) */}
           <div>
             <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
-              Mode Analisis Tanah:
+              Metode Penentuan Status Hara Tanah:
             </label>
-            <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+            <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl gap-1">
               <button
                 type="button"
                 onClick={() => setMode('kualitatif')}
-                className={`py-2.5 rounded-xl font-bold text-xs transition ${
+                className={`py-2 px-2 rounded-xl font-bold text-xs transition flex flex-col items-center justify-center ${
                   mode === 'kualitatif'
                     ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
-                Mode Kualitatif
+                <span>Metode Kualitatif</span>
+                <span className="text-[10px] font-semibold opacity-85">(PUTS dan PUTK)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setMode('kuantitatif')}
-                className={`py-2.5 rounded-xl font-bold text-xs transition ${
+                className={`py-2 px-2 rounded-xl font-bold text-xs transition flex flex-col items-center justify-center ${
                   mode === 'kuantitatif'
                     ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
-                Mode Kuantitatif (PUTS)
+                <span>Metode Kuantitatif</span>
+                <span className="text-[10px] font-semibold opacity-85">(Laboratorium)</span>
               </button>
             </div>
           </div>
@@ -326,6 +334,56 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
             </div>
           )}
 
+          {/* Input Luas Petak Sawah Petani (Hektar) */}
+          <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase">
+                Luas Petak Sawah Petani (Hektar):
+              </label>
+              <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400 font-mono">
+                {luas} ha ({Math.round(luas * 10000).toLocaleString('id-ID')} m²)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="number"
+                  step="0.05"
+                  min="0.01"
+                  placeholder="Contoh: 0.5 atau 1"
+                  value={luasPetak}
+                  onChange={(e) => setLuasPetak(e.target.value)}
+                  className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-bold focus:ring-2 focus:ring-emerald-500 text-xs"
+                />
+                <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">
+                  ha
+                </span>
+              </div>
+
+              {/* Tombol Cepat Pilihan Luas */}
+              <div className="flex items-center gap-1">
+                {[0.25, 0.5, 0.75, 1, 2].map((quickVal) => (
+                  <button
+                    key={quickVal}
+                    type="button"
+                    onClick={() => setLuasPetak(quickVal.toString())}
+                    className={`px-2 py-2 rounded-xl text-[10px] font-bold border transition ${
+                      parseFloat(luasPetak) === quickVal
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs ring-1 ring-emerald-500'
+                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    {quickVal} ha
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+              *Rekomendasi di bawah otomatis menghitung kebutuhan riil untuk petak <strong>{luas} hektar</strong> sekaligus dosis baku per hektar.
+            </p>
+          </div>
+
           {/* Pilihan Target Dosis Urea Dasar */}
           <div>
             <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
@@ -354,47 +412,77 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
 
           {/* KOTAK HASIL REKOMENDASI DOSIS */}
           <div className="space-y-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
-            <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-emerald-600" />
-              <span>Rekomendasi Dosis Pupuk per Hektar (1 Musim):</span>
-            </h4>
+            <div className="flex items-center justify-between">
+              <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-emerald-600" />
+                <span>Rekomendasi Dosis Pupuk:</span>
+              </h4>
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40">
+                Petak: {luas} ha
+              </span>
+            </div>
 
             {/* Paket Tunggal */}
-            <div className="p-3 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60">
-              <div className="font-bold text-emerald-900 dark:text-emerald-300 text-xs mb-1.5 flex items-center justify-between">
+            <div className="p-3 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 space-y-2">
+              <div className="font-bold text-emerald-900 dark:text-emerald-300 text-xs flex items-center justify-between">
                 <span>[OPSI A] Paket Pupuk Tunggal</span>
-                <span className="text-[10px] font-normal text-emerald-700 dark:text-emerald-400">Total Hara Lengkap</span>
+                <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">Total Hara Lengkap</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="p-2 bg-white/90 dark:bg-slate-900/90 rounded-xl shadow-xs border border-emerald-100 dark:border-emerald-900/50">
-                  <div className="text-[10px] text-slate-500">Urea</div>
-                  <div className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400">{hasil.tunggal.urea} <span className="text-[10px] font-normal">kg</span></div>
+                <div className="p-2 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-xs border border-emerald-100 dark:border-emerald-900/50">
+                  <div className="text-[10px] text-slate-500 font-medium">Urea</div>
+                  <div className="text-sm font-black text-emerald-700 dark:text-emerald-400 leading-tight">
+                    {(hasil.tunggal.urea * luas).toFixed(1).replace(/\.0$/, '')} <span className="text-[10px] font-normal">kg</span>
+                  </div>
+                  <div className="text-[9.5px] text-slate-400 mt-0.5 border-t border-slate-100 dark:border-slate-800 pt-0.5">
+                    {hasil.tunggal.urea} kg/ha
+                  </div>
                 </div>
-                <div className="p-2 bg-white/90 dark:bg-slate-900/90 rounded-xl shadow-xs border border-emerald-100 dark:border-emerald-900/50">
-                  <div className="text-[10px] text-slate-500">SP-36</div>
-                  <div className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400">{hasil.tunggal.sp36} <span className="text-[10px] font-normal">kg</span></div>
+                <div className="p-2 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-xs border border-emerald-100 dark:border-emerald-900/50">
+                  <div className="text-[10px] text-slate-500 font-medium">SP-36</div>
+                  <div className="text-sm font-black text-emerald-700 dark:text-emerald-400 leading-tight">
+                    {(hasil.tunggal.sp36 * luas).toFixed(1).replace(/\.0$/, '')} <span className="text-[10px] font-normal">kg</span>
+                  </div>
+                  <div className="text-[9.5px] text-slate-400 mt-0.5 border-t border-slate-100 dark:border-slate-800 pt-0.5">
+                    {hasil.tunggal.sp36} kg/ha
+                  </div>
                 </div>
-                <div className="p-2 bg-white/90 dark:bg-slate-900/90 rounded-xl shadow-xs border border-emerald-100 dark:border-emerald-900/50">
-                  <div className="text-[10px] text-slate-500">KCl</div>
-                  <div className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400">{hasil.tunggal.kcl} <span className="text-[10px] font-normal">kg</span></div>
+                <div className="p-2 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-xs border border-emerald-100 dark:border-emerald-900/50">
+                  <div className="text-[10px] text-slate-500 font-medium">KCl</div>
+                  <div className="text-sm font-black text-emerald-700 dark:text-emerald-400 leading-tight">
+                    {(hasil.tunggal.kcl * luas).toFixed(1).replace(/\.0$/, '')} <span className="text-[10px] font-normal">kg</span>
+                  </div>
+                  <div className="text-[9.5px] text-slate-400 mt-0.5 border-t border-slate-100 dark:border-slate-800 pt-0.5">
+                    {hasil.tunggal.kcl} kg/ha
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Paket Majemuk */}
-            <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-800/60">
-              <div className="font-bold text-blue-900 dark:text-blue-300 text-xs mb-1.5 flex items-center justify-between">
+            <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-800/60 space-y-2">
+              <div className="font-bold text-blue-900 dark:text-blue-300 text-xs flex items-center justify-between">
                 <span>[OPSI B] Paket Pupuk Majemuk (Substitusi)</span>
-                <span className="text-[10px] font-normal text-blue-700 dark:text-blue-400">NPK 15-10-12</span>
+                <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-400">NPK 15-10-12</span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-center">
-                <div className="p-2 bg-white/90 dark:bg-slate-900/90 rounded-xl shadow-xs border border-blue-100 dark:border-blue-900/50">
-                  <div className="text-[10px] text-slate-500">NPK 15-10-12</div>
-                  <div className="text-sm font-extrabold text-blue-700 dark:text-blue-400">{hasil.majemuk.npk} <span className="text-[10px] font-normal">kg</span></div>
+                <div className="p-2 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-xs border border-blue-100 dark:border-blue-900/50">
+                  <div className="text-[10px] text-slate-500 font-medium">NPK 15-10-12</div>
+                  <div className="text-sm font-black text-blue-700 dark:text-blue-400 leading-tight">
+                    {(hasil.majemuk.npk * luas).toFixed(1).replace(/\.0$/, '')} <span className="text-[10px] font-normal">kg</span>
+                  </div>
+                  <div className="text-[9.5px] text-slate-400 mt-0.5 border-t border-slate-100 dark:border-slate-800 pt-0.5">
+                    {hasil.majemuk.npk} kg/ha
+                  </div>
                 </div>
-                <div className="p-2 bg-white/90 dark:bg-slate-900/90 rounded-xl shadow-xs border border-blue-100 dark:border-blue-900/50">
-                  <div className="text-[10px] text-slate-500">Urea Tambahan</div>
-                  <div className="text-sm font-extrabold text-blue-700 dark:text-blue-400">{hasil.majemuk.ureaTambahan} <span className="text-[10px] font-normal">kg</span></div>
+                <div className="p-2 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-xs border border-blue-100 dark:border-blue-900/50">
+                  <div className="text-[10px] text-slate-500 font-medium">Urea Tambahan</div>
+                  <div className="text-sm font-black text-blue-700 dark:text-blue-400 leading-tight">
+                    {(hasil.majemuk.ureaTambahan * luas).toFixed(1).replace(/\.0$/, '')} <span className="text-[10px] font-normal">kg</span>
+                  </div>
+                  <div className="text-[9.5px] text-slate-400 mt-0.5 border-t border-slate-100 dark:border-slate-800 pt-0.5">
+                    {hasil.majemuk.ureaTambahan} kg/ha
+                  </div>
                 </div>
               </div>
             </div>

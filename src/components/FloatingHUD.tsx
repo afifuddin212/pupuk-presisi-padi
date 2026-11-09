@@ -188,13 +188,21 @@ export const FloatingHUD: React.FC<FloatingHUDProps> = ({
             <Layers className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </button>
 
-          {/* Primary Action: Buka Kalkulator Pupuk */}
+          {/* Primary Action: Buka Kalkulator Pupuk (Mencolok: Warna Emas / Amber-Oranye Terang) */}
           <button
             onClick={onOpenCalculator}
-            className="w-14 h-14 min-w-[56px] min-h-[56px] rounded-2xl bg-emerald-600 text-white shadow-2xl flex items-center justify-center hover:bg-emerald-700 border-2 border-emerald-400 transition"
-            title="Kalkulator Rekomendasi Pemupukan"
+            className="w-14 h-14 min-w-[56px] min-h-[56px] rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 text-white shadow-2xl shadow-orange-600/40 flex flex-col items-center justify-center hover:scale-105 active:scale-95 border-2 border-amber-200 dark:border-amber-300 ring-4 ring-amber-400/35 transition-all group relative"
+            title="Kalkulator Rekomendasi Pemupukan Presisi"
           >
-            <Calculator className="w-7 h-7" />
+            <Calculator className="w-6 h-6 text-white drop-shadow-md group-hover:rotate-6 transition-transform" />
+            <span className="text-[8px] font-black tracking-tight uppercase text-amber-100 -mt-0.5">
+              HITUNG
+            </span>
+            {/* Subtle beacon ping */}
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-400 border border-white"></span>
+            </span>
           </button>
         </div>
 

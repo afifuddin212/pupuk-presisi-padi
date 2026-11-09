@@ -22,21 +22,24 @@ Aplikasi ini dikembangkan mengacu pada standar resmi **Peraturan Menteri Pertani
 ## 🚀 Fitur Utama
 
 ### 1. Peta GIS Offline & Deteksi Kecamatan Otomatis
-- **Peta Vektor Tematik**: Menampilkan batas 23 kecamatan di Kabupaten Lampung Utara beserta status rekomendasi hara awal dari file spasial `rekomendasi_pupuk_padi_lampura.geojson`.
+- **Peta Vektor Tematik & Label Nama Kecamatan**: Menampilkan batas 23 kecamatan di Kabupaten Lampung Utara beserta label nama kecamatan permanen yang mudah dibaca (*high-contrast pill label*), serta status rekomendasi hara awal dari file spasial `rekomendasi_pupuk_padi_lampura.geojson`.
+- **Pemisahan Sumber Data InaSoilAgro vs Permentan 13/2022**: Layer peta spasial menampilkan data rekomendasi resmi **InaSoilAgro**, sedangkan formula perhitungan interaktif di kalkulator menggunakan acuan resmi **Permentan No. 13 Tahun 2022** untuk menjaga integritas kedua sumber data.
 - **Deteksi Spasial Point-in-Polygon (Turf.js)**: Mendeteksi otomatis posisi kecamatan pengguna melalui GPS atau tap manual di peta, serta otomatis mengisi nilai baseline Urea rekomendasi Permentan 13/2022 ($250\text{ kg/ha}$).
-- **Pop-up Informasi Multi-Layer Vektor**: Mengetuk poligon kecamatan menampilkan kartu rekomendasi pupuk yang bersih, status Fosfor (P) dan Kalium (K), paket tunggal dan majemuk, acuan tanaman jagung/kedelai, serta status layer vektor aktif lainnya (LBS, Kesesuaian Lahan, SPT).
+- **Pop-up Informasi Multi-Layer Vektor**: Mengetuk poligon kecamatan menampilkan kartu rekomendasi pupuk InaSoilAgro yang bersih, status Fosfor (P) dan Kalium (K), paket tunggal dan majemuk, acuan tanaman jagung/kedelai, serta status layer vektor aktif lainnya (LBS, Kesesuaian Lahan, SPT).
 - **Manual Field Location Pick**: Fitur pemilihan koordinat langsung di atas petak sawah dengan visual penanda beranimasi *bounce*.
 
 ### 2. Logika Kalkulator Dosis Pupuk Presisi (Permentan No. 13/2022)
-- **Mode Kualitatif**: Pemilihan status hara Fosfor (P) dan Kalium (K) langsung (Rendah / Sedang / Tinggi).
-- **Mode Kuantitatif (PUTS)**: Konversi otomatis hasil uji laboratorium/Perangkat Uji Tanah Sawah ($\text{P}_2\text{O}_5$ dan $\text{K}_2\text{O}$ dalam $\text{mg}/100\text{ g}$ tanah) ke kelas hara baku Permentan.
+- **Metode Kualitatif (PUTS dan PUTK)**: Pemilihan status hara Fosfor (P) dan Kalium (K) langsung (Rendah / Sedang / Tinggi) berdasarkan pengujian cepat bagan warna Perangkat Uji Tanah Sawah (PUTS) atau Perangkat Uji Tanah Kering (PUTK).
+- **Metode Kuantitatif (Laboratorium)**: Konversi otomatis hasil analisis kimia tanah laboratorium ($\text{P}_2\text{O}_5$ dan $\text{K}_2\text{O}$ dalam $\text{mg}/100\text{ g}$ tanah) ke kelas hara baku Permentan.
+- **Input Luas Petak Sawah Petani (Hektar)**: Petani/penyuluh dapat memasukkan luasan petak sawah riil (misal: 0.25 ha, 0.5 ha, 1.2 ha) dengan tombol pilihan cepat.
 - **Pilihan Target Hasil / Urea**: $250\text{ kg/ha}$ (baseline kecamatan), $300\text{ kg/ha}$, atau $350\text{ kg/ha}$.
-- **Output Dosis Ganda**:
-  1. **Paket Pupuk Tunggal**: Urea, SP-36, dan KCl ($\text{kg/ha/musim}$).
-  2. **Paket Pupuk Majemuk**: NPK 15-10-12 dan Urea Tambahan ($\text{kg/ha/musim}$).
-- **Catatan Edukasi Wajib**: *"CATATAN: Rekomendasi di atas merupakan acuan resmi Permentan 13/2022. Konsultasikan dengan penyuluh (PPL) setempat untuk kondisi riil lahan."*
+- **Output Dosis Ganda & Kebutuhan Riil Petak**:
+  1. **Paket Pupuk Tunggal**: Urea, SP-36, dan KCl ditampilkan dalam kebutuhan riil petak petani ($\text{kg}$) dan dosis baku per hektar ($\text{kg/ha}$).
+  2. **Paket Pupuk Majemuk**: NPK 15-10-12 dan Urea Tambahan ditampilkan dalam kebutuhan riil petak petani ($\text{kg}$) dan dosis baku per hektar ($\text{kg/ha}$).
+- **Catatan Edukasi Wajib**: *"CATATAN PENTING: Rekomendasi di atas merupakan acuan resmi Permentan 13/2022. Konsultasikan dengan penyuluh (PPL) setempat."*
 
 ### 3. Manajemen Daya Perangkat & Ergonomi Lapangan (Outdoor UI/UX)
+- **Tombol Kalkulator Kontras Tinggi (High-Visibility Gold/Amber)**: Tombol aksi utama Kalkulator Pemupukan Presisi diwarnai gradien emas/amber-oranye cerah dengan *beacon pulse* agar sangat mencolok dan mudah dikenali petani di bawah terik sinar matahari sawah.
 - **GNSS Hardware Power Governance**: Tombol on/off sensor GPS di HUD atas untuk menghemat daya baterai ponsel saat survei lapangan di bawah terik matahari.
 - **Indikator Akurasi Telemetri**: Menampilkan radius akurasi sensor GNSS secara *real-time* dalam satuan meter ($\pm 3.2\text{ m}$).
 - **Kompas & Tombol "Lokasi Saya"**: Memusatkan kamera peta langsung ke titik GPS perangkat dengan transisi *flyTo* yang halus.
@@ -267,3 +270,4 @@ Aplikasi ini dirancang untuk mendukung program pertanian terpadu di Kabupaten La
 
 ## 📄 Lisensi
 Didistribusikan di bawah Lisensi MIT. Lihat berkas `LICENSE` untuk informasi lebih lanjut.
+

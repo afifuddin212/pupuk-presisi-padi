@@ -30,3 +30,8 @@ android/
 ios/
 capacitor.config.json.bak
 
+# Private agent configurations & implementation plans (Local Only)
+.agents/
+.agent/
+IMPLEMENTATION_PLAN.md
+

@@ -17,6 +17,8 @@ export const SurveyPointPopup: React.FC<SurveyPointPopupProps> = ({
 }) => {
   if (!point) return null;
 
+  const luas = point.luasPetak || 1;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div 
@@ -59,17 +61,22 @@ export const SurveyPointPopup: React.FC<SurveyPointPopupProps> = ({
                 Kec. {point.kecamatan} ({point.latitude.toFixed(5)}, {point.longitude.toFixed(5)})
               </span>
             </div>
+            {point.luasPetak && (
+              <div className="flex items-center gap-1.5 truncate col-span-2 text-emerald-700 dark:text-emerald-400 font-bold">
+                <span>Luas Petak: {point.luasPetak} ha ({Math.round(point.luasPetak * 10000).toLocaleString('id-ID')} m²)</span>
+              </div>
+            )}
           </div>
 
           {/* Status Hara */}
           <div className="flex items-center justify-between p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl">
-            <span className="font-semibold text-slate-600 dark:text-slate-400">Status Hara:</span>
+            <span className="font-semibold text-slate-600 dark:text-slate-400">Status Hara (PUTS/PUTK):</span>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-md font-bold text-[11px] bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400">
-                P: {point.pStatus} {point.p2o5Kuantitatif ? `(${point.p2o5Kuantitatif} mg)` : ''}
+                P: {point.pStatus} {point.p2o5Kuantitatif ? `(${point.p2o5Kuantitatif} mg Lab)` : ''}
               </span>
               <span className="px-2 py-0.5 rounded-md font-bold text-[11px] bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400">
-                K: {point.kStatus} {point.k2oKuantitatif ? `(${point.k2oKuantitatif} mg)` : ''}
+                K: {point.kStatus} {point.k2oKuantitatif ? `(${point.k2oKuantitatif} mg Lab)` : ''}
               </span>
             </div>
           </div>
@@ -77,37 +84,58 @@ export const SurveyPointPopup: React.FC<SurveyPointPopupProps> = ({
           {/* Dosis Hasil */}
           <div className="space-y-2">
             <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
-              <div className="font-bold text-emerald-900 dark:text-emerald-300 text-xs mb-1">
-                Paket Pupuk Tunggal (kg/ha):
+              <div className="font-bold text-emerald-900 dark:text-emerald-300 text-xs mb-1.5 flex items-center justify-between">
+                <span>Paket Pupuk Tunggal</span>
+                <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+                  {luas !== 1 ? `Petak ${luas} ha` : 'per Hektar'}
+                </span>
               </div>
               <div className="flex justify-around text-center text-xs">
                 <div>
                   <div className="text-[10px] text-slate-500">Urea</div>
-                  <div className="font-extrabold text-emerald-700 dark:text-emerald-400">{point.tunggal.urea} kg</div>
+                  <div className="font-extrabold text-emerald-700 dark:text-emerald-400">
+                    {(point.tunggal.urea * luas).toFixed(1).replace(/\.0$/, '')} kg
+                  </div>
+                  {luas !== 1 && <div className="text-[9px] text-slate-400">({point.tunggal.urea} kg/ha)</div>}
                 </div>
                 <div>
                   <div className="text-[10px] text-slate-500">SP-36</div>
-                  <div className="font-extrabold text-emerald-700 dark:text-emerald-400">{point.tunggal.sp36} kg</div>
+                  <div className="font-extrabold text-emerald-700 dark:text-emerald-400">
+                    {(point.tunggal.sp36 * luas).toFixed(1).replace(/\.0$/, '')} kg
+                  </div>
+                  {luas !== 1 && <div className="text-[9px] text-slate-400">({point.tunggal.sp36} kg/ha)</div>}
                 </div>
                 <div>
                   <div className="text-[10px] text-slate-500">KCl</div>
-                  <div className="font-extrabold text-emerald-700 dark:text-emerald-400">{point.tunggal.kcl} kg</div>
+                  <div className="font-extrabold text-emerald-700 dark:text-emerald-400">
+                    {(point.tunggal.kcl * luas).toFixed(1).replace(/\.0$/, '')} kg
+                  </div>
+                  {luas !== 1 && <div className="text-[9px] text-slate-400">({point.tunggal.kcl} kg/ha)</div>}
                 </div>
               </div>
             </div>
 
             <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800/60">
-              <div className="font-bold text-blue-900 dark:text-blue-300 text-xs mb-1">
-                Paket Majemuk Substitusi:
+              <div className="font-bold text-blue-900 dark:text-blue-300 text-xs mb-1.5 flex items-center justify-between">
+                <span>Paket Majemuk Substitusi</span>
+                <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-400">
+                  {luas !== 1 ? `Petak ${luas} ha` : 'per Hektar'}
+                </span>
               </div>
               <div className="flex justify-around text-center text-xs">
                 <div>
                   <div className="text-[10px] text-slate-500">NPK 15-10-12</div>
-                  <div className="font-extrabold text-blue-700 dark:text-blue-400">{point.majemuk.npk} kg</div>
+                  <div className="font-extrabold text-blue-700 dark:text-blue-400">
+                    {(point.majemuk.npk * luas).toFixed(1).replace(/\.0$/, '')} kg
+                  </div>
+                  {luas !== 1 && <div className="text-[9px] text-slate-400">({point.majemuk.npk} kg/ha)</div>}
                 </div>
                 <div>
                   <div className="text-[10px] text-slate-500">Urea Tambahan</div>
-                  <div className="font-extrabold text-blue-700 dark:text-blue-400">{point.majemuk.ureaTambahan} kg</div>
+                  <div className="font-extrabold text-blue-700 dark:text-blue-400">
+                    {(point.majemuk.ureaTambahan * luas).toFixed(1).replace(/\.0$/, '')} kg
+                  </div>
+                  {luas !== 1 && <div className="text-[9px] text-slate-400">({point.majemuk.ureaTambahan} kg/ha)</div>}
                 </div>
               </div>
             </div>

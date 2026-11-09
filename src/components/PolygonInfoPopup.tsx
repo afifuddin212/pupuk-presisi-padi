@@ -161,7 +161,7 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                   <span>Rekomendasi Pemupukan Padi Sawah</span>
                 </div>
                 <span className="text-[10px] font-bold bg-emerald-200/60 dark:bg-emerald-900 px-2 py-0.5 rounded-full text-emerald-800 dark:text-emerald-200">
-                  Permentan 13/2022
+                  InaSoilAgro
                 </span>
               </div>
 
@@ -305,7 +305,7 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <span className="font-bold">CATATAN: </span>
-              <span>Rekomendasi di atas merupakan acuan resmi Permentan 13/2022. Konsultasikan dengan penyuluh (PPL) setempat untuk kondisi riil lahan.</span>
+              <span>Rekomendasi di atas merupakan data acuan dari Peta InaSoilAgro. Konsultasikan dengan penyuluh (PPL) setempat untuk kondisi riil lahan.</span>
             </div>
           </div>
         </div>
@@ -321,10 +321,10 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
 
           <button
             onClick={handleOpenCalculator}
-            className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl shadow-xl transition flex items-center justify-center gap-2 text-xs border border-emerald-400"
+            className="flex-1 py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold rounded-2xl shadow-xl transition flex items-center justify-center gap-2 text-xs border border-amber-300"
           >
-            <Calculator className="w-4 h-4" />
-            <span>Buka Kalkulator Kecamatan Ini</span>
+            <Calculator className="w-4 h-4 text-white" />
+            <span>Buka Kalkulator (Isi Luas Petak)</span>
           </button>
         </div>
       </div>

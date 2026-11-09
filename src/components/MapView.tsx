@@ -206,7 +206,14 @@ export const MapView: React.FC<MapViewProps> = ({
         const props = feature.properties || {};
         const kec = props.KECAMATAN || 'Kecamatan';
 
-        // Tidak menggunakan bindTooltip box hitam! Cukup interaksi klik, highlight & pop-up informatif
+        // Tampilkan label nama kecamatan permanen di tengah poligon (Outdoor high-contrast)
+        polyLayer.bindTooltip(kec, {
+          permanent: true,
+          direction: 'center',
+          className: 'kecamatan-map-label',
+        });
+
+        // Interaksi klik: highlight & pop-up informatif
         polyLayer.on('click', (e: L.LeafletMouseEvent) => {
           L.DomEvent.stopPropagation(e);
           const lat = e.latlng.lat;
