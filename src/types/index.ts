@@ -1,4 +1,6 @@
 export type HaraStatus = 'Rendah' | 'Sedang' | 'Tinggi';
+export type JenisPadi = 'sawah' | 'gogo';
+export type MetodeRekomendasi = 'permentan' | 'puts' | 'putk';
 
 export interface DosisPaketTunggal {
   urea: number;
@@ -9,14 +11,19 @@ export interface DosisPaketTunggal {
 export interface DosisPaketMajemuk {
   npk: number;          // NPK 15-10-12
   ureaTambahan: number; // Tambahan Urea
+  sp36Tambahan?: number; // Tambahan SP-36 (khusus Padi Gogo / PUTK karena defisit fosfat lahan kering masam)
 }
 
 export interface RekomendasiResult {
+  jenisPadi: JenisPadi;
+  metode: MetodeRekomendasi;
   pStatus: HaraStatus;
   kStatus: HaraStatus;
   targetUrea: number;
   tunggal: DosisPaketTunggal;
   majemuk: DosisPaketMajemuk;
+  hasStrawRecycled?: boolean;
+  catatanKhusus?: string;
 }
 
 export interface KecamatanInfo {
@@ -37,12 +44,15 @@ export interface SurveyPoint {
   accuracy?: number;
   source: 'gps' | 'manual';
   kecamatan: string;
+  jenisPadi?: JenisPadi;
+  metodeRekomendasi?: MetodeRekomendasi;
   luasPetak?: number; // Luas petak sawah dalam hektar (misal: 0.25, 0.5, 1 ha)
   pStatus: HaraStatus;
   kStatus: HaraStatus;
   p2o5Kuantitatif?: number;
   k2oKuantitatif?: number;
   targetUrea: number;
+  hasStrawRecycled?: boolean;
   tunggal: DosisPaketTunggal;
   majemuk: DosisPaketMajemuk;
   notes?: string;

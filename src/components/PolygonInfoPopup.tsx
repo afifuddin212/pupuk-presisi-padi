@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import { 
   X, 
   MapPin, 
-  Sparkles, 
   Calculator, 
   Layers, 
   AlertTriangle, 
   ChevronDown, 
   ChevronUp, 
   Wheat,
+  Table,
+  CheckCircle2,
+  Sparkles,
   Info
 } from 'lucide-react';
-import { PolygonFeatureInfo, LayerItem, HaraStatus } from '../types';
+import { PolygonFeatureInfo, LayerItem, HaraStatus, JenisPadi, MetodeRekomendasi } from '../types';
 
 interface PolygonInfoPopupProps {
   info: PolygonFeatureInfo | null;
@@ -21,9 +23,13 @@ interface PolygonInfoPopupProps {
     kecamatan: string, 
     pStatus?: HaraStatus, 
     kStatus?: HaraStatus, 
-    ureaDasar?: number
+    ureaDasar?: number,
+    jenisPadi?: JenisPadi,
+    metode?: MetodeRekomendasi
   ) => void;
 }
+
+type TabRekomendasi = 'inasoilagro' | 'permentan' | 'puts' | 'putk';
 
 export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
   info,
@@ -31,6 +37,8 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
   onClose,
   onOpenCalculatorForKecamatan,
 }) => {
+  const [activeTab, setActiveTab] = useState<TabRekomendasi>('inasoilagro');
+  const [showComparisonTable, setShowComparisonTable] = useState<boolean>(false);
   const [showOtherCrops, setShowOtherCrops] = useState<boolean>(false);
 
   if (!info) return null;
@@ -40,29 +48,136 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
   const kabName = info.kabupaten || props.KABKOT || 'Lampung Utara';
   const provName = info.provinsi || props.PROVINSI || 'Lampung';
 
-  // Nilai Rekomendasi Padi Sawah dari GeoJSON (Inasoilagro / Permentan 13/2022)
+  // Status Hara dari GeoJSON (InaSoilAgro)
   const pPadi = (props.P_PADI as HaraStatus) || 'Rendah';
   const kPadi = (props.K_PADI as HaraStatus) || 'Tinggi';
-  const ureaTunggal = props.UREA_T_PAD || '250';
-  const sp36Tunggal = props.SP_36_PADI || (pPadi === 'Rendah' ? '100' : pPadi === 'Sedang' ? '75' : '50');
-  const kclTunggal = props.KCl_PADI || (kPadi === 'Rendah' ? '100' : '50');
-  const npkMajemuk = props.NPK_15_10_ || '250';
-  const ureaMajemuk = props.UREA_M_PAD || '175';
 
-  // Check layer apa saja yang sedang aktif
+  // 1. Rekomendasi InaSoilAgro (Data atribut raw GeoJSON)
+  const inasoilDose = {
+    p: pPadi,
+    k: kPadi,
+    tunggal: {
+      urea: parseInt(props.UREA_T_PAD, 10) || 250,
+      sp36: parseInt(props.SP_36_PADI, 10) || 50,
+      kcl: parseInt(props.KCl_PADI, 10) || 50,
+    },
+    majemuk: {
+      npk: parseInt(props.NPK_15_10_, 10) || 250,
+      urea: parseInt(props.UREA_M_PAD, 10) || 175,
+      sp36Tambahan: 0,
+    },
+    title: 'InaSoilAgro',
+    subtitle: 'Data Spasial Peta Rekomendasi',
+    badge: 'Data Peta',
+    keterangan: 'Rekomendasi bawaan dari atribut layer spasial InaSoilAgro Lampung Utara.',
+  };
+
+  // 2. Rekomendasi Permentan 13/2022 (Baku per-kecamatan Lampiran A)
+  const permentanDose = {
+    p: 'Sedang' as HaraStatus,
+    k: 'Sedang' as HaraStatus,
+    tunggal: {
+      urea: 250,
+      sp36: 75,
+      kcl: 50,
+    },
+    majemuk: {
+      npk: 300,
+      urea: 150,
+      sp36Tambahan: 0,
+    },
+    title: 'Permentan 13/2022',
+    subtitle: 'Ketetapan Baku Tabel Kecamatan',
+    badge: 'Baku Wilayah',
+    keterangan: 'Ketetapan resmi Lampiran A Permentan 13/2022 untuk Kecamatan ' + kecName + '.',
+  };
+
+  // 3. Rekomendasi Padi Sawah (PUTS) dengan nilai hara P & K dari InaSoilAgro
+  const putsDose = {
+    p: pPadi,
+    k: kPadi,
+    tunggal: {
+      urea: 250,
+      sp36: pPadi === 'Rendah' ? 100 : pPadi === 'Sedang' ? 75 : 50,
+      kcl: kPadi === 'Rendah' ? 100 : 50,
+    },
+    majemuk: {
+      npk: pPadi === 'Rendah' ? 375 : pPadi === 'Sedang' ? 300 : 250,
+      urea: pPadi === 'Rendah' ? 125 : pPadi === 'Sedang' ? 150 : 175,
+      sp36Tambahan: 0,
+    },
+    title: 'PUTS (Padi Sawah)',
+    subtitle: 'Formula Uji Tanah Sawah',
+    badge: `Hara P: ${pPadi}, K: ${kPadi}`,
+    keterangan: 'Formula uji tanah sawah presisi dengan status hara P & K setempat.',
+  };
+
+  // 4. Rekomendasi Padi Gogo / Lahan Kering (PUTK) dengan nilai hara P & K dari InaSoilAgro
+  const putkDose = {
+    p: pPadi,
+    k: kPadi,
+    tunggal: {
+      urea: 300,
+      sp36: pPadi === 'Rendah' ? 200 : pPadi === 'Sedang' ? 150 : 100,
+      kcl: kPadi === 'Rendah' ? 100 : kPadi === 'Sedang' ? 75 : 50,
+    },
+    majemuk: {
+      npk: pPadi === 'Rendah' ? 450 : pPadi === 'Sedang' ? 400 : 350,
+      urea: pPadi === 'Rendah' ? 150 : pPadi === 'Sedang' ? 175 : 200,
+      sp36Tambahan: pPadi === 'Rendah' ? 75 : pPadi === 'Sedang' ? 50 : 0,
+    },
+    title: 'PUTK (Padi Gogo)',
+    subtitle: 'Formula Padi Lahan Kering Masam',
+    badge: 'Defisit Fosfat Tinggi',
+    keterangan: 'Formula lahan kering masam dengan tambahan SP-36 untuk menutup defisit fosfat.',
+  };
+
+  // Pilih item rekomendasi yang sedang aktif
+  const currentItem = 
+    activeTab === 'inasoilagro' ? inasoilDose :
+    activeTab === 'permentan' ? permentanDose :
+    activeTab === 'puts' ? putsDose : putkDose;
+
+  // Cek apakah layer rekomendasi padi aktif
   const isLayerActive = (layerId: string) => {
     const l = activeLayers.find((item) => item.id === layerId);
     return l ? l.active : false;
   };
 
+  const isRekomendasiLayerActive = isLayerActive('inasoilagro');
   const activeVectorLayers = activeLayers.filter((l) => l.active);
 
   const handleOpenCalculator = () => {
+    let jenisPadi: JenisPadi = 'sawah';
+    let metode: MetodeRekomendasi = 'puts';
+    let targetUrea = currentItem.tunggal.urea;
+
+    if (activeTab === 'putk') {
+      jenisPadi = 'gogo';
+      metode = 'putk';
+      targetUrea = 300;
+    } else if (activeTab === 'permentan') {
+      jenisPadi = 'sawah';
+      metode = 'permentan';
+      targetUrea = 250;
+    } else if (activeTab === 'puts') {
+      jenisPadi = 'sawah';
+      metode = 'puts';
+      targetUrea = 250;
+    } else {
+      // inasoilagro default ke puts dengan status hara inasoilagro
+      jenisPadi = 'sawah';
+      metode = 'puts';
+      targetUrea = 250;
+    }
+
     onOpenCalculatorForKecamatan(
       kecName,
-      pPadi,
-      kPadi,
-      parseInt(ureaTunggal, 10) || 250
+      currentItem.p,
+      currentItem.k,
+      targetUrea,
+      jenisPadi,
+      metode
     );
     onClose();
   };
@@ -70,7 +185,7 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
   return (
     <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-[2px] animate-fadeIn">
       <div 
-        className="w-full max-w-lg max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border-t sm:border border-slate-200 dark:border-slate-800"
+        className="w-full max-w-lg max-h-[88vh] bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border-t sm:border border-slate-200 dark:border-slate-800"
         style={{ paddingBottom: 'calc(var(--sab) + 6px)' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -87,11 +202,9 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                     Informasi Wilayah Terpilih
                   </span>
-                  {activeVectorLayers.length > 1 && (
-                    <span className="text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.2 rounded-md">
-                      {activeVectorLayers.length} Layer
-                    </span>
-                  )}
+                  <span className="text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.2 rounded-md">
+                    Permentan 13/2022
+                  </span>
                 </div>
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">
                   Kecamatan {kecName}
@@ -100,7 +213,7 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                   Kab. {kabName}, Prov. {provName}
                   {info.coordinates && (
                     <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">
-                      Titik Peta: {info.coordinates[0].toFixed(5)}, {info.coordinates[1].toFixed(5)}
+                      Koordinat: {info.coordinates[0].toFixed(5)}, {info.coordinates[1].toFixed(5)}
                     </span>
                   )}
                 </p>
@@ -117,113 +230,226 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
           </div>
         </div>
 
-        {/* Active Layers Indicator Bar */}
-        <div className="px-5 py-2 bg-slate-100/80 dark:bg-slate-800/60 border-b border-slate-200/60 dark:border-slate-800 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Layers className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
-              Layer Aktif ({activeVectorLayers.length}):
-            </span>
-          </div>
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-            {activeVectorLayers.map((l) => (
-              <span
-                key={l.id}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 shrink-0 shadow-xs"
-              >
-                <span
-                  className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ backgroundColor: l.legend[0]?.color || '#10b981' }}
-                />
-                <span className="truncate max-w-[120px]">{l.name.replace(/\(.*?\)/g, '').trim()}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Scrollable Content: Disusun Rapi per Layer Aktif */}
+        {/* Scrollable Content */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-700 dark:text-slate-300 custom-scrollbar">
-          {/* JIKA SEMUA LAYER NONAKTIF */}
-          {activeVectorLayers.length === 0 && (
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-700 text-center space-y-1">
-              <p className="font-bold text-slate-700 dark:text-slate-300 text-xs">Semua Layer Vektor Dinonaktifkan</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Aktifkan kembali layer pada tombol Layer (sisi kanan layar) untuk menampilkan informasi spasial.
-              </p>
-            </div>
-          )}
-          {/* SECTION 1: LAYER REKOMENDASI PEMUPUKAN INASOILAGRO (JIKA AKTIF) */}
-          {isLayerActive('inasoilagro') && (
-            <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 space-y-2.5">
+          
+          {/* 4 OPSI REKOMENDASI PEMUPUKAN */}
+          {isRekomendasiLayerActive ? (
+            <div className="space-y-3">
+              {/* Header Rekomendasi & Tombol Toggle Bandingkan */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 font-extrabold text-emerald-900 dark:text-emerald-300 text-xs">
+                <div className="flex items-center gap-1.5">
                   <Wheat className="w-4 h-4 text-emerald-600" />
-                  <span>Rekomendasi Pemupukan Padi Sawah</span>
+                  <span className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide">
+                    4 Opsi Rekomendasi Pemupukan:
+                  </span>
                 </div>
-                <span className="text-[10px] font-bold bg-emerald-200/60 dark:bg-emerald-900 px-2 py-0.5 rounded-full text-emerald-800 dark:text-emerald-200">
-                  InaSoilAgro
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowComparisonTable(!showComparisonTable)}
+                  className="flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800/80"
+                >
+                  <Table className="w-3.5 h-3.5" />
+                  <span>{showComparisonTable ? 'Tutup Tabel' : 'Bandingkan Semua'}</span>
+                </button>
               </div>
 
-              {/* Status Hara Tanah */}
-              <div className="grid grid-cols-2 gap-2 text-center">
-                <div className="p-2 bg-white/90 dark:bg-slate-900/90 rounded-xl border border-emerald-100 dark:border-emerald-900/50 shadow-xs">
-                  <div className="text-[10px] text-slate-500">Status Fosfor (P)</div>
-                  <div className="text-xs font-black text-emerald-700 dark:text-emerald-400">
-                    {pPadi}
-                  </div>
-                </div>
-                <div className="p-2 bg-white/90 dark:bg-slate-900/90 rounded-xl border border-emerald-100 dark:border-emerald-900/50 shadow-xs">
-                  <div className="text-[10px] text-slate-500">Status Kalium (K)</div>
-                  <div className="text-xs font-black text-emerald-700 dark:text-emerald-400">
-                    {kPadi}
-                  </div>
-                </div>
+              {/* TAB NAVIGATION PILLS */}
+              <div className="grid grid-cols-4 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl gap-1">
+                {[
+                  { id: 'inasoilagro', label: 'InaSoilAgro', desc: 'Data Peta' },
+                  { id: 'permentan', label: 'Permentan', desc: 'Baku Kec.' },
+                  { id: 'puts', label: 'PUTS', desc: 'Padi Sawah' },
+                  { id: 'putk', label: 'PUTK', desc: 'Padi Gogo' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveTab(tab.id as TabRekomendasi);
+                      setShowComparisonTable(false);
+                    }}
+                    className={`py-2 px-1 rounded-xl text-center transition flex flex-col items-center justify-center ${
+                      activeTab === tab.id
+                        ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 font-extrabold shadow-sm ring-1 ring-slate-200 dark:ring-slate-700'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-white/50 font-semibold'
+                    }`}
+                  >
+                    <span className="text-[11px] leading-tight">{tab.label}</span>
+                    <span className="text-[9px] opacity-75 font-normal">{tab.desc}</span>
+                  </button>
+                ))}
               </div>
 
-              {/* Dosis Paket Tunggal */}
-              <div className="p-2.5 bg-white/80 dark:bg-slate-900/80 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 flex items-center justify-between">
-                  <span>Paket Pupuk Tunggal (kg/ha)</span>
-                  <span className="text-emerald-600 font-semibold">1 Musim Tanam</span>
+              {/* JIKA USER MENGKLIK 'BANDINGKAN SEMUA' */}
+              {showComparisonTable ? (
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2.5 animate-fadeIn">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-[11px] text-slate-800 dark:text-slate-200">
+                      Tabel Perbandingan 4 Rekomendasi (Dosis per Hektar):
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto no-scrollbar">
+                    <table className="w-full text-[10.5px] border-collapse text-left">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500 font-bold">
+                          <th className="py-1 px-1.5">Metode</th>
+                          <th className="py-1 px-1.5">Paket Tunggal (Urea / SP-36 / KCl)</th>
+                          <th className="py-1 px-1.5">Paket Majemuk (NPK + Urea Tambahan)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        <tr className="hover:bg-slate-100/60 dark:hover:bg-slate-700/40">
+                          <td className="py-1.5 px-1.5 font-bold text-emerald-700 dark:text-emerald-400">
+                            a. InaSoilAgro
+                          </td>
+                          <td className="py-1.5 px-1.5 font-mono">250 / 50 / 50 kg</td>
+                          <td className="py-1.5 px-1.5 font-mono">NPK 250 + Urea 175 kg</td>
+                        </tr>
+                        <tr className="hover:bg-slate-100/60 dark:hover:bg-slate-700/40">
+                          <td className="py-1.5 px-1.5 font-bold text-blue-700 dark:text-blue-400">
+                            b. Permentan 13/2022
+                          </td>
+                          <td className="py-1.5 px-1.5 font-mono">250 / 75 / 50 kg</td>
+                          <td className="py-1.5 px-1.5 font-mono">NPK 300 + Urea 150 kg</td>
+                        </tr>
+                        <tr className="hover:bg-slate-100/60 dark:hover:bg-slate-700/40">
+                          <td className="py-1.5 px-1.5 font-bold text-teal-700 dark:text-teal-400">
+                            c. PUTS (Sawah)
+                          </td>
+                          <td className="py-1.5 px-1.5 font-mono">250 / 100 / 50 kg</td>
+                          <td className="py-1.5 px-1.5 font-mono">NPK 375 + Urea 125 kg</td>
+                        </tr>
+                        <tr className="hover:bg-slate-100/60 dark:hover:bg-slate-700/40">
+                          <td className="py-1.5 px-1.5 font-bold text-amber-700 dark:text-amber-400">
+                            d. PUTK (Gogo)
+                          </td>
+                          <td className="py-1.5 px-1.5 font-mono">300 / 200 / 50 kg</td>
+                          <td className="py-1.5 px-1.5 font-mono">
+                            NPK 450 + Urea 150 <br />
+                            <span className="text-amber-600 font-bold">+ SP-36 Tambahan 75 kg</span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-[10px] text-slate-500 italic">
+                    *Semua dosis dalam takaran per-hektar satu musim tanam.
+                  </p>
                 </div>
-                <div className="grid grid-cols-3 gap-1.5 text-center">
-                  <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <div className="text-[10px] text-slate-400">Urea</div>
-                    <div className="font-extrabold text-xs text-slate-800 dark:text-slate-100">{ureaTunggal} kg</div>
+              ) : (
+                /* TAMPILAN KARTU DETAIL REKOMENDASI AKTIF */
+                <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 space-y-3 animate-fadeIn">
+                  {/* Judul & Badge Subtitle */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5 font-extrabold text-emerald-900 dark:text-emerald-300 text-xs">
+                        <span>{currentItem.title}</span>
+                      </div>
+                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                        {currentItem.subtitle}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-bold bg-emerald-200/60 dark:bg-emerald-900/80 px-2 py-0.5 rounded-full text-emerald-800 dark:text-emerald-200">
+                      {currentItem.badge}
+                    </span>
                   </div>
-                  <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <div className="text-[10px] text-slate-400">SP-36</div>
-                    <div className="font-extrabold text-xs text-slate-800 dark:text-slate-100">{sp36Tunggal} kg</div>
-                  </div>
-                  <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <div className="text-[10px] text-slate-400">KCl</div>
-                    <div className="font-extrabold text-xs text-slate-800 dark:text-slate-100">{kclTunggal} kg</div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Dosis Paket Majemuk Substitusi */}
-              <div className="p-2.5 bg-white/80 dark:bg-slate-900/80 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 flex items-center justify-between">
-                  <span>Paket Majemuk Substitusi (kg/ha)</span>
-                  <span className="text-blue-600 font-semibold">NPK 15-10-12</span>
-                </div>
-                <div className="grid grid-cols-2 gap-1.5 text-center">
-                  <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <div className="text-[10px] text-slate-400">NPK 15-10-12</div>
-                    <div className="font-extrabold text-xs text-blue-700 dark:text-blue-400">{npkMajemuk} kg</div>
+                  {/* Status Hara Tanah */}
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div className="p-2 bg-white/90 dark:bg-slate-900/90 rounded-xl border border-emerald-100 dark:border-emerald-900/50 shadow-xs">
+                      <div className="text-[10px] text-slate-500">Status Fosfor (P)</div>
+                      <div className="text-xs font-black text-emerald-700 dark:text-emerald-400">
+                        {currentItem.p}
+                      </div>
+                    </div>
+                    <div className="p-2 bg-white/90 dark:bg-slate-900/90 rounded-xl border border-emerald-100 dark:border-emerald-900/50 shadow-xs">
+                      <div className="text-[10px] text-slate-500">Status Kalium (K)</div>
+                      <div className="text-xs font-black text-emerald-700 dark:text-emerald-400">
+                        {currentItem.k}
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <div className="text-[10px] text-slate-400">Urea Tambahan</div>
-                    <div className="font-extrabold text-xs text-blue-700 dark:text-blue-400">{ureaMajemuk} kg</div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Toggle Info Tanaman Lain (Kedelai & Jagung di GeoJSON) */}
+                  {/* Dosis Paket Tunggal */}
+                  <div className="p-2.5 bg-white/90 dark:bg-slate-900/90 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 flex items-center justify-between">
+                      <span>Paket Pupuk Tunggal (kg/ha)</span>
+                      <span className="text-emerald-600 font-semibold">1 Musim Tanam</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5 text-center">
+                      <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="text-[9.5px] text-slate-400">Urea</div>
+                        <div className="font-extrabold text-xs text-slate-800 dark:text-slate-100">
+                          {currentItem.tunggal.urea} kg
+                        </div>
+                      </div>
+                      <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="text-[9.5px] text-slate-400">SP-36</div>
+                        <div className="font-extrabold text-xs text-slate-800 dark:text-slate-100">
+                          {currentItem.tunggal.sp36} kg
+                        </div>
+                      </div>
+                      <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="text-[9.5px] text-slate-400">KCl</div>
+                        <div className="font-extrabold text-xs text-slate-800 dark:text-slate-100">
+                          {currentItem.tunggal.kcl} kg
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dosis Paket Majemuk */}
+                  <div className="p-2.5 bg-white/90 dark:bg-slate-900/90 rounded-xl border border-emerald-100 dark:border-emerald-900/40 space-y-1.5">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide flex items-center justify-between">
+                      <span>Paket Pupuk Majemuk (kg/ha)</span>
+                      <span className="text-blue-600 font-semibold">NPK 15-10-12</span>
+                    </div>
+                    
+                    <div className={`grid ${currentItem.majemuk.sp36Tambahan > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 text-center`}>
+                      <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="text-[9.5px] text-slate-400">NPK 15-10-12</div>
+                        <div className="font-extrabold text-xs text-blue-700 dark:text-blue-400">
+                          {currentItem.majemuk.npk} kg
+                        </div>
+                      </div>
+                      <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="text-[9.5px] text-slate-400">Urea Tambahan</div>
+                        <div className="font-extrabold text-xs text-blue-700 dark:text-blue-400">
+                          {currentItem.majemuk.urea} kg
+                        </div>
+                      </div>
+                      {currentItem.majemuk.sp36Tambahan > 0 && (
+                        <div className="p-1.5 bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800/80 rounded-lg">
+                          <div className="text-[9.5px] text-amber-700 dark:text-amber-300 font-bold">SP-36 Tambahan</div>
+                          <div className="font-extrabold text-xs text-amber-800 dark:text-amber-200">
+                            {currentItem.majemuk.sp36Tambahan} kg
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Catatan SP-36 Tambahan Bahasa Jelas */}
+                    {currentItem.majemuk.sp36Tambahan > 0 && (
+                      <div className="p-2 bg-amber-100/70 dark:bg-amber-950/80 rounded-lg text-[10.5px] text-amber-900 dark:text-amber-200 flex items-start gap-1.5">
+                        <Info className="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5" />
+                        <div>
+                          <strong>Wajib Tambahan Fosfat:</strong> Petani harus memberikan SP-36 Tambahan sebanyak{' '}
+                          <strong>{currentItem.majemuk.sp36Tambahan} kg/ha</strong> untuk mencukupi defisit fosfat tanah masam.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
+                    *{currentItem.keterangan}
+                  </p>
+                </div>
+              )}
+
+              {/* Data Acuan Komoditas Lain (Jagung & Kedelai) */}
               {(props.UREA_T_JG || props.UREA_T_KDL) && (
-                <div className="pt-1">
+                <div className="pt-0.5">
                   <button
                     type="button"
                     onClick={() => setShowOtherCrops(!showOtherCrops)}
@@ -246,9 +472,16 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                 </div>
               )}
             </div>
+          ) : (
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-700 text-center space-y-1">
+              <p className="font-bold text-slate-700 dark:text-slate-300 text-xs">Layer Peta Rekomendasi Dinonaktifkan</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Aktifkan layer 'Peta Rekomendasi Pemupukan Padi' pada menu Layer untuk melihat dosis spasial.
+              </p>
+            </div>
           )}
 
-          {/* SECTION 2: LAYER LAHAN BAKU SAWAH (LBS) JIKA AKTIF */}
+          {/* LAYER PENDUKUNG LAINNYA JIKA DIAKTIFKAN */}
           {isLayerActive('lbs') && (
             <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 text-xs">
@@ -261,7 +494,6 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
             </div>
           )}
 
-          {/* SECTION 3: LAYER KESESUAIAN LAHAN PADI JIKA AKTIF */}
           {isLayerActive('kesesuaian') && (
             <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 text-xs">
@@ -274,7 +506,6 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
             </div>
           )}
 
-          {/* SECTION 4: LAYER SATUAN PETA TANAH (SPT) JIKA AKTIF */}
           {isLayerActive('spt') && (
             <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 text-xs">
@@ -287,7 +518,6 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
             </div>
           )}
 
-          {/* SECTION 5: LAYER BATAS ADMINISTRASI JIKA AKTIF */}
           {isLayerActive('batas_desa') && (
             <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 text-xs">
@@ -304,8 +534,8 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
           <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 p-3 rounded-2xl flex items-start gap-2 text-[11px] text-amber-900 dark:text-amber-200">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">CATATAN: </span>
-              <span>Rekomendasi di atas merupakan data acuan dari Peta InaSoilAgro. Konsultasikan dengan penyuluh (PPL) setempat untuk kondisi riil lahan.</span>
+              <span className="font-bold">CATATAN PENTING: </span>
+              <span>Rekomendasi di atas mengacu pada Permentan No. 13 Tahun 2022 dan data spasial. Konsultasikan dengan penyuluh (PPL) setempat untuk kondisi riil lahan.</span>
             </div>
           </div>
         </div>
@@ -324,7 +554,7 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
             className="flex-1 py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold rounded-2xl shadow-xl transition flex items-center justify-center gap-2 text-xs border border-amber-300"
           >
             <Calculator className="w-4 h-4 text-white" />
-            <span>Buka Kalkulator (Isi Luas Petak)</span>
+            <span>Hitung dengan Luas Petak ({activeTab.toUpperCase()})</span>
           </button>
         </div>
       </div>

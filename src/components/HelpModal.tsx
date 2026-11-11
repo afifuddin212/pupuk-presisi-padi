@@ -8,7 +8,10 @@ import {
   MapPin, 
   Calculator, 
   Share2, 
-  Layers 
+  Layers,
+  Wheat,
+  Info,
+  Table
 } from 'lucide-react';
 
 interface HelpModalProps {
@@ -34,11 +37,11 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">
                 Pusat Bantuan &amp; Panduan
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Pupuk Presisi Padi Lampung Utara
+                Pupuk Presisi Padi Lampung Utara &bull; Permentan 13/2022
               </p>
             </div>
           </div>
@@ -73,7 +76,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             }`}
           >
             <BookOpen className="w-4 h-4" />
-            <span>Dasar Permentan 13/2022</span>
+            <span>Dasar &amp; Formula Terpadu</span>
           </button>
         </div>
 
@@ -84,10 +87,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <div className="space-y-4">
               <div className="bg-emerald-50 dark:bg-emerald-950/40 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800/60">
                 <h4 className="font-bold text-emerald-900 dark:text-emerald-300 text-sm mb-1">
-                  Panduan Singkat Lapangan (Petani &amp; PPL):
+                  Panduan Lapangan untuk Petani &amp; Penyuluh (PPL):
                 </h4>
                 <p className="text-[11px] text-emerald-800 dark:text-emerald-300">
-                  Aplikasi ini dirancang khusus untuk mempermudah perhitungan pupuk padi di sawah tanpa perlu koneksi internet.
+                  Aplikasi ini membantu menentukan takaran pupuk berimbang untuk <strong>Padi Sawah</strong> dan <strong>Padi Gogo</strong> secara presisi sesuai kondisi tanah setempat.
                 </p>
               </div>
 
@@ -99,26 +102,36 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 <div>
                   <h5 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                    Tentukan Lokasi Sawah
+                    Pilih Wilayah Kecamatan di Peta
                   </h5>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    Aktifkan tombol <strong>GPS</strong> (atau klik tombol <em>Lokasi Saya</em> di kanan atas) agar aplikasi mendeteksi posisi kecamatan sawah Anda secara otomatis. Anda juga dapat mengetuk langsung poligon kecamatan di peta.
+                    Ketuk langsung salah satu poligon kecamatan di peta. Akan muncul pop-up yang menyajikan <strong>4 jenis rekomendasi</strong>:
+                    <br />
+                    • <strong>InaSoilAgro</strong>: Sesuai data spasial peta.
+                    <br />
+                    • <strong>Permentan 13/2022</strong>: Dosis baku tabel kecamatan.
+                    <br />
+                    • <strong>PUTS (Padi Sawah)</strong>: Formula uji sawah presisi.
+                    <br />
+                    • <strong>PUTK (Padi Gogo)</strong>: Formula lahan kering masam.
+                    <br />
+                    Gunakan tombol <em>Bandingkan Semua</em> untuk melihat tabel perbandingan secara langsung.
                   </p>
                 </div>
               </div>
 
               {/* Langkah 2 */}
               <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/60">
-                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">
+                <div className="w-7 h-7 rounded-full bg-amber-500 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">
                   2
                 </div>
                 <div>
                   <h5 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <Calculator className="w-3.5 h-3.5 text-amber-500" />
-                    Buka Kalkulator Pemupukan
+                    Buka Kalkulator Pemupukan Presisi
                   </h5>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    Ketuk tombol besar berwarna kuning keemasan (bertuliskan <strong>HITUNG</strong>) di pojok kanan bawah layar untuk membuka panel kalkulator.
+                    Ketuk tombol besar berwarna <strong>kuning keemasan</strong> (bertuliskan <strong>HITUNG</strong>) di pojok kanan bawah layar atau tombol <em>Hitung dengan Luas Petak</em> dari pop-up kecamatan.
                   </p>
                 </div>
               </div>
@@ -129,13 +142,13 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   3
                 </div>
                 <div>
-                  <h5 className="font-bold text-slate-900 dark:text-white">
-                    Pilih Metode Input Status Hara Tanah &amp; Luas Lahan
+                  <h5 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Wheat className="w-3.5 h-3.5 text-emerald-600" />
+                    Pilih Jenis Tanaman &amp; Metode Rekomendasi
                   </h5>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    • <strong>Metode Kualitatif (PUTS dan PUTK)</strong>: Pilih langsung kategori Rendah, Sedang, atau Tinggi berdasarkan uji cepat bagan warna.<br />
-                    • <strong>Metode Kuantitatif (Laboratorium)</strong>: Masukkan angka hasil uji laboratorium (P₂O₅ &amp; K₂O dalam mg/100g).<br />
-                    • <strong>Luas Petak Sawah (ha)</strong>: Tentukan luas petak sawah untuk menghitung kebutuhan pupuk riil petani.
+                    • <strong>Padi Sawah</strong>: Anda dapat memilih metode <em>PUTS (Uji Sawah)</em> atau <em>Permentan 13/2022 (Baku Kecamatan)</em>.<br />
+                    • <strong>Padi Gogo</strong>: Menggunakan metode <em>PUTK (Perangkat Uji Tanah Kering / BRMP)</em> yang khusus disesuaikan untuk tanah kering masam.
                   </p>
                 </div>
               </div>
@@ -147,28 +160,28 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 <div>
                   <h5 className="font-bold text-slate-900 dark:text-white">
-                    Lihat Rekomendasi Dosis (Sesuai Luas Petak &amp; per Hektar)
+                    Isi Luas Petak &amp; Status Hara Tanah
                   </h5>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    Aplikasi menampilkan 2 opsi paket pemupukan (dosis kebutuhan petak petani dan dosis baku per hektar):<br />
-                    • <strong>Paket Tunggal</strong>: Urea + SP-36 + KCl.<br />
-                    • <strong>Paket Majemuk</strong>: Substitusi NPK 15-10-12 + Urea tambahan.
+                    • <strong>Luas Petak (ha)</strong>: Masukkan luasan petak sawah petani (contoh: 0.25 ha, 0.5 ha, 1 ha) agar hasil takaran pupuk langsung dalam kilogram nyata siap tebar.<br />
+                    • <strong>Metode Kualitatif</strong>: Pilih langsung Rendah / Sedang / Tinggi sesuai warna uji PUTS/PUTK.<br />
+                    • <strong>Metode Kuantitatif</strong>: Masukkan angka laboratorium (P₂O₅ dan K₂O).
                   </p>
                 </div>
               </div>
 
               {/* Langkah 5 */}
               <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/60">
-                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">
+                <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">
                   5
                 </div>
                 <div>
                   <h5 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <Share2 className="w-3.5 h-3.5 text-blue-600" />
-                    Rekam &amp; Kirim Data Survei
+                    Simpan Titik &amp; Kirim Data ke Peneliti
                   </h5>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    Ketik nama Anda di kolom <em>Nama Pencatat</em> lalu klik <strong>Simpan Rekomendasi ke Peta</strong>. Untuk mengirim rekap seluruh titik ke WhatsApp grup tim peneliti/penyuluh, gunakan tombol biru <strong>KIRIM DATA SURVEI</strong>.
+                    Simpan titik survei langsung ke peta offline Anda. Gunakan tombol <strong>KIRIM DATA SURVEI</strong> untuk membagikan data rekapitulasi (CSV/GeoJSON) ke WhatsApp grup penyuluh atau langsung ke webhook Google Sheets peneliti.
                   </p>
                 </div>
               </div>
@@ -178,28 +191,27 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold">CATATAN PENTING: </span>
-                  <span>Konsultasikan hasil ini dengan penyuluh (PPL) setempat untuk membagi waktu aplikasi pupuk (HST) sesuai fase pertumbuhan tanaman padi Anda.</span>
+                  <span>Konsultasikan hasil ini dengan penyuluh (PPL) setempat untuk mengatur jadwal pemupukan (fase vegetatif dan generatif) serta kondisi air sawah.</span>
                 </div>
               </div>
             </div>
           ) : (
-            /* TAB 2: DASAR REGULASI PERMENTAN 13/2022 */
+            /* TAB 2: DASAR REGULASI & FORMULA TERPADU */
             <div className="space-y-4">
               <div className="bg-emerald-50/80 dark:bg-emerald-950/40 p-3.5 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/50">
                 <h4 className="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5 mb-1 text-sm">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Dasar Hukum Regulasi
+                  Landasan Regulasi &amp; Pustaka
                 </h4>
                 <p>
-                  Peraturan Menteri Pertanian Republik Indonesia <strong>Nomor 13 Tahun 2022</strong> tentang 
-                  <em> Penggunaan Dosis Pupuk N, P, dan K untuk Padi, Jagung, dan Kedelai pada Lahan Sawah</em>.
+                  Mengacu pada <strong>Permentan No. 13 Tahun 2022</strong> tentang Dosis Pupuk N, P, K untuk Lahan Sawah, dipadukan dengan standar teknis <strong>Uji Tanah Sawah (PUTS)</strong> dan <strong>Uji Tanah Kering (PUTK / BRMP)</strong>.
                 </p>
               </div>
 
-              {/* Ambang Batas PUTS */}
+              {/* Ambang Batas Kuantitatif */}
               <div>
                 <h4 className="font-bold text-slate-900 dark:text-white mb-2 text-sm">
-                  1. Kriteria Status Hara Tanah (Pasal 6)
+                  1. Ambang Batas Status Hara Tanah (Pasal 6 Permentan 13/2022)
                 </h4>
                 <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
                   <table className="w-full text-left text-[11px]">
@@ -231,31 +243,48 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              {/* Dosis Pupuk Tunggal */}
+              {/* Formula Padi Sawah */}
               <div>
-                <h4 className="font-bold text-slate-900 dark:text-white mb-2 text-sm">
-                  2. Formula Rekomendasi Pupuk Tunggal (Pasal 8)
+                <h4 className="font-bold text-slate-900 dark:text-white mb-1.5 text-sm">
+                  2. Formula Rekomendasi Padi Sawah (PUTS &amp; Permentan 13/2022)
                 </h4>
-                <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-300">
-                  <li><strong>Fosfor (SP-36)</strong>: Rendah = 100 kg/ha | Sedang = 75 kg/ha | Tinggi = 50 kg/ha.</li>
-                  <li><strong>Kalium (KCl)</strong>: Rendah = 100 kg/ha | Sedang &amp; Tinggi = 50 kg/ha.</li>
-                  <li><strong>Urea</strong>: Mengacu pada tabel Lampiran Permentan per kecamatan (23 kecamatan di Lampung Utara memiliki acuan dasar 250 kg/ha).</li>
+                <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-300 text-[11px]">
+                  <li><strong>Target Urea Dasar</strong>: 250 kg/ha (&lt;5 ton), 300 kg/ha (5-6 ton), atau 350 kg/ha (&gt;6 ton).</li>
+                  <li><strong>SP-36</strong>: Rendah = 100 kg/ha | Sedang = 75 kg/ha | Tinggi = 50 kg/ha.</li>
+                  <li><strong>KCl</strong>: Rendah = 100 kg/ha | Sedang &amp; Tinggi = 50 kg/ha.</li>
+                  <li><strong>Koreksi Jerami</strong>: Pengembalian jerami segar ≥ 5 ton/ha menurunkan kebutuhan KCl menjadi 0–50 kg/ha.</li>
+                  <li><strong>Paket Majemuk Resmi</strong>: Substitusi NPK 15-10-12 (250–375 kg/ha) ditambah Urea penutup defisit nitrogen.</li>
                 </ul>
               </div>
 
-              {/* Dosis Pupuk Majemuk */}
-              <div>
-                <h4 className="font-bold text-slate-900 dark:text-white mb-2 text-sm">
-                  3. Paket Substitusi Majemuk (Pasal 9 &amp; Lampiran)
+              {/* Formula Padi Gogo */}
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl space-y-2">
+                <h4 className="font-bold text-amber-900 dark:text-amber-200 text-sm flex items-center gap-1.5">
+                  <Wheat className="w-4 h-4 text-amber-600" />
+                  3. Formula Khusus Padi Gogo / Lahan Kering (PUTK / BRMP)
                 </h4>
-                <p className="mb-1 text-slate-600 dark:text-slate-400">
-                  Formula <strong>NPK 15-10-12</strong> dikombinasikan dengan Urea penambah:
+                <p className="text-[11px] text-amber-900 dark:text-amber-300">
+                  Pada tanah kering masam (Ultisol/Podsolik), terjadi fiksasi fosfat yang sangat tinggi oleh ion Al³⁺ dan Fe³⁺. Oleh karena itu:
                 </p>
-                <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-300">
-                  <li><strong>P Rendah</strong>: 375 kg NPK + (125 / 175 / 225) kg Urea</li>
-                  <li><strong>P Sedang</strong>: 300 kg NPK + (150 / 200 / 250) kg Urea</li>
-                  <li><strong>P Tinggi</strong>: 250 kg NPK + (175 / 225 / 275) kg Urea</li>
+                <ul className="list-disc pl-4 space-y-1 text-amber-900 dark:text-amber-300 text-[11px]">
+                  <li>Kebutuhan pupuk Fosfat (SP-36) mencapai <strong>2 kali lipat</strong> (100–200 kg/ha).</li>
+                  <li>Target Urea dasar baku ditetapkan <strong>300 kg/ha</strong>.</li>
+                  <li><strong>Wajib SP-36 Tambahan</strong>: Pupuk subsidi NPK 15-10-12 hanya memiliki 10% fosfat, sehingga petani <strong>harus memberikan SP-36 Tambahan (50–75 kg/ha)</strong> pada paket majemuk agar kebutuhan hara fosfat tanaman tercukupi.</li>
                 </ul>
+              </div>
+
+              {/* Ketetapan Permentan Baku Kecamatan */}
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-white mb-1.5 text-sm">
+                  4. Ketetapan Baku Per-Kecamatan di Lampung Utara (Lampiran A)
+                </h4>
+                <p className="text-slate-600 dark:text-slate-400 text-[11px]">
+                  Untuk seluruh 23 kecamatan di Kabupaten Lampung Utara, lampiran Permentan 13/2022 menetapkan dosis baku sawah:
+                  <br />
+                  • <strong>Paket Tunggal</strong>: Urea 250 kg/ha, SP-36 75 kg/ha, KCl 50 kg/ha.
+                  <br />
+                  • <strong>Paket Majemuk</strong>: NPK 15-10-12 300 kg/ha + Urea Tambahan 150 kg/ha.
+                </p>
               </div>
 
               {/* CATATAN PENTING */}
@@ -263,7 +292,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold">CATATAN PENTING: </span>
-                  <span>Konsultasikan hasil ini dengan penyuluh (PPL) setempat.</span>
+                  <span>Rekomendasi di atas merupakan acuan resmi. Konsultasikan dengan penyuluh pertanian lapangan (PPL) setempat untuk implementasi riil.</span>
                 </div>
               </div>
             </div>

@@ -7,7 +7,7 @@ import { HelpModal } from './components/HelpModal';
 import { SurveyPointPopup } from './components/SurveyPointPopup';
 import { SurveyExportModal } from './components/SurveyExportModal';
 import { PolygonInfoPopup } from './components/PolygonInfoPopup';
-import { LayerItem, SurveyPoint, PolygonFeatureInfo } from './types';
+import { LayerItem, SurveyPoint, PolygonFeatureInfo, HaraStatus, JenisPadi, MetodeRekomendasi } from './types';
 import { 
   getAllSurveyPoints, 
   saveSurveyPoint, 
@@ -53,12 +53,19 @@ export function App() {
   const [isLayersOpen, setIsLayersOpen] = useState<boolean>(false);
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
+  const [calculatorPrefill, setCalculatorPrefill] = useState<{
+    jenisPadi?: JenisPadi;
+    metode?: MetodeRekomendasi;
+    pStatus?: HaraStatus;
+    kStatus?: HaraStatus;
+    targetUrea?: number;
+  }>({});
 
   // Daftar Layer Spasial
   const [layers, setLayers] = useState<LayerItem[]>([
     {
       id: 'inasoilagro',
-      name: 'Peta Rekomendasi Inasoilagro (Lampung Utara)',
+      name: 'Peta Rekomendasi Pemupukan Padi',
       active: true,
       available: true,
       filename: 'rekomendasi_pupuk_padi_lampura.geojson',
@@ -304,8 +311,15 @@ export function App() {
         info={selectedPolygonInfo}
         activeLayers={layers}
         onClose={() => setSelectedPolygonInfo(null)}
-        onOpenCalculatorForKecamatan={(kec) => {
+        onOpenCalculatorForKecamatan={(kec, pStatus, kStatus, ureaDasar, jenisPadi, metode) => {
           setDetectedKecamatan(kec);
+          setCalculatorPrefill({
+            jenisPadi,
+            metode,
+            pStatus,
+            kStatus,
+            targetUrea: ureaDasar,
+          });
           setIsCalculatorOpen(true);
         }}
       />
@@ -329,6 +343,11 @@ export function App() {
         currentCoordinates={pickedLocation || userLocation}
         gpsAccuracy={pickedLocation ? undefined : gpsAccuracy}
         lastSurveyor={lastSurveyor}
+        initialJenisPadi={calculatorPrefill.jenisPadi}
+        initialMetode={calculatorPrefill.metode}
+        initialPStatus={calculatorPrefill.pStatus}
+        initialKStatus={calculatorPrefill.kStatus}
+        initialTargetUrea={calculatorPrefill.targetUrea}
         onSavePoint={handleSaveSurveyPoint}
         onOpenHelp={() => setIsHelpOpen(true)}
         onRequestManualPick={() => {

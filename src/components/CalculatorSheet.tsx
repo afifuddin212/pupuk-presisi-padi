@@ -9,9 +9,12 @@ import {
   User, 
   Save, 
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Wheat,
+  Info,
+  Layers
 } from 'lucide-react';
-import { HaraStatus, SurveyPoint } from '../types';
+import { HaraStatus, SurveyPoint, JenisPadi, MetodeRekomendasi } from '../types';
 import { hitungRekomendasiPupuk } from '../utils/fertilizerCalculator';
 import { convertP2O5ToStatus, convertK2OToStatus } from '../utils/putsConverter';
 
@@ -23,6 +26,11 @@ interface CalculatorSheetProps {
   currentCoordinates: [number, number] | null;
   gpsAccuracy?: number;
   lastSurveyor: string;
+  initialJenisPadi?: JenisPadi;
+  initialMetode?: MetodeRekomendasi;
+  initialPStatus?: HaraStatus;
+  initialKStatus?: HaraStatus;
+  initialTargetUrea?: number;
   onSavePoint: (point: Omit<SurveyPoint, 'id' | 'timestamp'>) => void;
   onOpenHelp: () => void;
   onRequestManualPick: () => void;
@@ -37,26 +45,37 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
   currentCoordinates,
   gpsAccuracy,
   lastSurveyor,
+  initialJenisPadi,
+  initialMetode,
+  initialPStatus,
+  initialKStatus,
+  initialTargetUrea,
   onSavePoint,
   onOpenHelp,
   onRequestManualPick,
   isPickingManualLocation,
 }) => {
+  // Jenis Padi (Sawah vs Gogo) & Metode
+  const [jenisPadi, setJenisPadi] = useState<JenisPadi>(initialJenisPadi || 'sawah');
+  const [metode, setMetode] = useState<MetodeRekomendasi>(initialMetode || 'puts');
   const [mode, setMode] = useState<'kualitatif' | 'kuantitatif'>('kualitatif');
   
   // Status Hara State
-  const [pStatus, setPStatus] = useState<HaraStatus>('Rendah');
-  const [kStatus, setKStatus] = useState<HaraStatus>('Tinggi');
+  const [pStatus, setPStatus] = useState<HaraStatus>(initialPStatus || 'Rendah');
+  const [kStatus, setKStatus] = useState<HaraStatus>(initialKStatus || 'Tinggi');
   
-  // Nilai Kuantitatif PUTS State
+  // Nilai Kuantitatif Laboratorium
   const [p2o5Val, setP2o5Val] = useState<string>('');
   const [k2oVal, setK2oVal] = useState<string>('');
 
   // Luas Petak Sawah (Hektar)
   const [luasPetak, setLuasPetak] = useState<string>('1');
 
-  // Target Dosis Urea Dasar
-  const [targetUrea, setTargetUrea] = useState<number>(250);
+  // Target Dosis Urea Dasar (Padi Sawah)
+  const [targetUrea, setTargetUrea] = useState<number>(initialTargetUrea || 250);
+
+  // Koreksi Jerami (Hanya Sawah)
+  const [hasStrawRecycled, setHasStrawRecycled] = useState<boolean>(false);
   
   // Kecamatan & Surveyor Info
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>(detectedKecamatan || 'BUKIT KEMUNING');
@@ -64,6 +83,15 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
   const [useCurrentGps, setUseCurrentGps] = useState<boolean>(true);
   const [notes, setNotes] = useState<string>('');
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+
+  // Update initial props jika berubah
+  useEffect(() => {
+    if (initialJenisPadi) setJenisPadi(initialJenisPadi);
+    if (initialMetode) setMetode(initialMetode);
+    if (initialPStatus) setPStatus(initialPStatus);
+    if (initialKStatus) setKStatus(initialKStatus);
+    if (initialTargetUrea) setTargetUrea(initialTargetUrea);
+  }, [initialJenisPadi, initialMetode, initialPStatus, initialKStatus, initialTargetUrea]);
 
   // Update selectedKecamatan jika terdeteksi baru
   useEffect(() => {
@@ -79,7 +107,21 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
     }
   }, [lastSurveyor]);
 
-  // Handler update PUTS Kuantitatif
+  // Sinkronisasi jenis padi dan metode yang valid
+  const handleSelectJenisPadi = (val: JenisPadi) => {
+    setJenisPadi(val);
+    if (val === 'gogo') {
+      setMetode('putk');
+      setTargetUrea(300);
+    } else {
+      // Sawah
+      if (metode === 'putk') {
+        setMetode('puts');
+      }
+    }
+  };
+
+  // Handler update Kuantitatif
   const handleP2o5Change = (valStr: string) => {
     setP2o5Val(valStr);
     const num = parseFloat(valStr);
@@ -96,8 +138,17 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
     }
   };
 
-  // Hasil Perhitungan
-  const hasil = hitungRekomendasiPupuk(pStatus, kStatus, targetUrea);
+  // Hasil Perhitungan Terpadu
+  const hasil = hitungRekomendasiPupuk(
+    pStatus,
+    kStatus,
+    targetUrea,
+    jenisPadi,
+    metode,
+    hasStrawRecycled,
+    selectedKecamatan
+  );
+
   const luasVal = parseFloat(luasPetak);
   const luas = !isNaN(luasVal) && luasVal > 0 ? luasVal : 1;
 
@@ -114,12 +165,15 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
       accuracy: gpsAccuracy,
       source: useCurrentGps ? 'gps' : 'manual',
       kecamatan: selectedKecamatan,
+      jenisPadi,
+      metodeRekomendasi: metode,
       luasPetak: luas,
       pStatus,
       kStatus,
       p2o5Kuantitatif: p2o5Val ? parseFloat(p2o5Val) : undefined,
       k2oKuantitatif: k2oVal ? parseFloat(k2oVal) : undefined,
       targetUrea,
+      hasStrawRecycled,
       tunggal: hasil.tunggal,
       majemuk: hasil.majemuk,
       notes,
@@ -135,7 +189,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
       <div 
-        className="w-full max-w-xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden border-t border-slate-200 dark:border-slate-800"
+        className="w-full max-w-xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden border-t border-slate-200 dark:border-slate-800"
         style={{ paddingBottom: 'calc(var(--sab) + 8px)' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -144,16 +198,21 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
           <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mb-3" />
           <div className="w-full flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Calculator className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Kalkulator Pemupukan Presisi
-              </h3>
+              <Calculator className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">
+                  Kalkulator Pemupukan Presisi
+                </h3>
+                <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                  Permentan 13/2022 &bull; PUTS &bull; PUTK
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-1.5">
               <button
                 onClick={onOpenHelp}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition"
-                title="Lihat Aturan Permentan 13/2022"
+                title="Panduan Pemupukan Terpadu"
               >
                 <HelpCircle className="w-5 h-5" />
               </button>
@@ -169,12 +228,96 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
 
         {/* Form Body Scrollable */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-700 dark:text-slate-300 custom-scrollbar">
-          {/* Deteksi Wilayah Kecamatan */}
+          
+          {/* 1. PILIHAN JENIS TANAMAN / SAWAH (Sawah vs Gogo) */}
+          <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 space-y-2">
+            <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase flex items-center gap-1.5">
+              <Wheat className="w-3.5 h-3.5 text-emerald-600" />
+              <span>1. Jenis Tanaman / Lahan:</span>
+            </label>
+            <div className="grid grid-cols-2 p-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 gap-1">
+              <button
+                type="button"
+                onClick={() => handleSelectJenisPadi('sawah')}
+                className={`py-2 px-2 rounded-lg font-bold text-xs transition flex flex-col items-center justify-center ${
+                  jenisPadi === 'sawah'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <span>Padi Sawah</span>
+                <span className="text-[9.5px] opacity-85 font-normal">(Lahan Basah / Irigasi)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectJenisPadi('gogo')}
+                className={`py-2 px-2 rounded-lg font-bold text-xs transition flex flex-col items-center justify-center ${
+                  jenisPadi === 'gogo'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <span>Padi Gogo</span>
+                <span className="text-[9.5px] opacity-85 font-normal">(Lahan Kering Masam)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 2. PILIHAN METODE REKOMENDASI PEMUPUKAN */}
+          <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 space-y-2">
+            <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-blue-600" />
+              <span>2. Metode Rekomendasi Pemupukan:</span>
+            </label>
+
+            {jenisPadi === 'sawah' ? (
+              <div className="grid grid-cols-2 p-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 gap-1">
+                <button
+                  type="button"
+                  onClick={() => setMetode('puts')}
+                  className={`py-2 px-2 rounded-lg font-bold text-xs transition flex flex-col items-center justify-center text-center ${
+                    metode === 'puts'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <span>PUTS (Uji Sawah)</span>
+                  <span className="text-[9.5px] opacity-85 font-normal">Sesuai Status Hara P &amp; K</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMetode('permentan')}
+                  className={`py-2 px-2 rounded-lg font-bold text-xs transition flex flex-col items-center justify-center text-center ${
+                    metode === 'permentan'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <span>Permentan 13/2022</span>
+                  <span className="text-[9.5px] opacity-85 font-normal">Ketetapan Baku Kecamatan</span>
+                </button>
+              </div>
+            ) : (
+              <div className="p-2.5 bg-amber-50 dark:bg-amber-950/60 rounded-xl border border-amber-200 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-200 space-y-1">
+                <div className="font-extrabold flex items-center justify-between">
+                  <span>Metode PUTK (Perangkat Uji Tanah Kering / BRMP)</span>
+                  <span className="bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-full text-[10px]">
+                    Otomatis Aktif
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-amber-800 dark:text-amber-300">
+                  Untuk lahan kering masam, kebutuhan fosfat dihitung hingga 2x lipat dan paket pupuk majemuk menyertakan tambahan SP-36.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* 3. DETEKSI / PILIH KECAMATAN */}
           <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
             <div className="flex items-center justify-between gap-2 mb-1.5">
               <label className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Kecamatan di Lampung Utara (Permentan 13/2022):</span>
+                <span>Kecamatan di Lampung Utara:</span>
               </label>
               {detectedKecamatan && (
                 <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full">
@@ -200,145 +343,150 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
             </select>
           </div>
 
-          {/* Toggle Mode Input (Kualitatif: PUTS dan PUTK vs Kuantitatif: Laboratorium) */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
-              Metode Penentuan Status Hara Tanah:
-            </label>
-            <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl gap-1">
-              <button
-                type="button"
-                onClick={() => setMode('kualitatif')}
-                className={`py-2 px-2 rounded-xl font-bold text-xs transition flex flex-col items-center justify-center ${
-                  mode === 'kualitatif'
-                    ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                <span>Metode Kualitatif</span>
-                <span className="text-[10px] font-semibold opacity-85">(PUTS dan PUTK)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('kuantitatif')}
-                className={`py-2 px-2 rounded-xl font-bold text-xs transition flex flex-col items-center justify-center ${
-                  mode === 'kuantitatif'
-                    ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                <span>Metode Kuantitatif</span>
-                <span className="text-[10px] font-semibold opacity-85">(Laboratorium)</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Input Section Berdasarkan Mode */}
-          {mode === 'kualitatif' ? (
+          {/* 4. INPUT HARA TANAH (JIKA METODE PUTS ATAU PUTK) */}
+          {metode !== 'permentan' && (
             <div className="space-y-3">
-              {/* Status Hara Fosfor (P) */}
+              {/* Toggle Kualitatif vs Kuantitatif */}
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-bold text-slate-800 dark:text-slate-200">
-                    1. Status Hara Fosfor (P):
-                  </span>
-                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                    Dipilih: {pStatus}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['Rendah', 'Sedang', 'Tinggi'] as HaraStatus[]).map((status) => (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => setPStatus(status)}
-                      className={`min-h-[46px] rounded-xl border font-bold text-xs transition flex items-center justify-center ${
-                        pStatus === status
-                          ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/30'
-                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      {status}
-                    </button>
-                  ))}
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
+                  Cara Penentuan Status Hara Tanah:
+                </label>
+                <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setMode('kualitatif')}
+                    className={`py-2 px-2 rounded-xl font-bold text-xs transition flex flex-col items-center justify-center ${
+                      mode === 'kualitatif'
+                        ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    <span>Metode Kualitatif</span>
+                    <span className="text-[9.5px] font-semibold opacity-85">
+                      ({jenisPadi === 'sawah' ? 'PUTS' : 'PUTK'} Bagan Warna)
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode('kuantitatif')}
+                    className={`py-2 px-2 rounded-xl font-bold text-xs transition flex flex-col items-center justify-center ${
+                      mode === 'kuantitatif'
+                        ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    <span>Metode Kuantitatif</span>
+                    <span className="text-[9.5px] font-semibold opacity-85">(Laboratorium mg/100g)</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Status Hara Kalium (K) */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-bold text-slate-800 dark:text-slate-200">
-                    2. Status Hara Kalium (K):
-                  </span>
-                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                    Dipilih: {kStatus}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['Rendah', 'Sedang', 'Tinggi'] as HaraStatus[]).map((status) => (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => setKStatus(status)}
-                      className={`min-h-[46px] rounded-xl border font-bold text-xs transition flex items-center justify-center ${
-                        kStatus === status
-                          ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/30'
-                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      {status}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {/* Input Kuantitatif P2O5 */}
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="font-bold text-slate-800 dark:text-slate-200">
-                    Kadar P₂O₅ (mg / 100 g tanah):
-                  </label>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                    {pStatus}
-                  </span>
-                </div>
-                <input
-                  type="number"
-                  placeholder="Contoh: 28.5 (Ambang: &lt;20 Rendah, 20-40 Sedang, &gt;40 Tinggi)"
-                  value={p2o5Val}
-                  onChange={(e) => handleP2o5Change(e.target.value)}
-                  className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-semibold focus:ring-2 focus:ring-emerald-500 text-xs"
-                />
-              </div>
+              {mode === 'kualitatif' ? (
+                <div className="space-y-3">
+                  {/* Status Hara Fosfor (P) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-bold text-slate-800 dark:text-slate-200">
+                        Status Hara Fosfor (P):
+                      </span>
+                      <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        Dipilih: {pStatus}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['Rendah', 'Sedang', 'Tinggi'] as HaraStatus[]).map((status) => (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => setPStatus(status)}
+                          className={`min-h-[44px] rounded-xl border font-bold text-xs transition flex items-center justify-center ${
+                            pStatus === status
+                              ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/30'
+                              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {status}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Input Kuantitatif K2O */}
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="font-bold text-slate-800 dark:text-slate-200">
-                    Kadar K₂O (mg / 100 g tanah):
-                  </label>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                    {kStatus}
-                  </span>
+                  {/* Status Hara Kalium (K) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-bold text-slate-800 dark:text-slate-200">
+                        Status Hara Kalium (K):
+                      </span>
+                      <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        Dipilih: {kStatus}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['Rendah', 'Sedang', 'Tinggi'] as HaraStatus[]).map((status) => (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => setKStatus(status)}
+                          className={`min-h-[44px] rounded-xl border font-bold text-xs transition flex items-center justify-center ${
+                            kStatus === status
+                              ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/30'
+                              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {status}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <input
-                  type="number"
-                  placeholder="Contoh: 14.2 (Ambang: &lt;10 Rendah, 10-20 Sedang, &gt;20 Tinggi)"
-                  value={k2oVal}
-                  onChange={(e) => handleK2oChange(e.target.value)}
-                  className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-semibold focus:ring-2 focus:ring-emerald-500 text-xs"
-                />
-              </div>
+              ) : (
+                /* Mode Kuantitatif Lab */
+                <div className="space-y-3">
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="font-bold text-slate-800 dark:text-slate-200">
+                        Kadar P₂O₅ (mg / 100 g tanah):
+                      </label>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                        {pStatus}
+                      </span>
+                    </div>
+                    <input
+                      type="number"
+                      placeholder="Contoh: 18.5 (<20 Rendah, 20-40 Sedang, >40 Tinggi)"
+                      value={p2o5Val}
+                      onChange={(e) => handleP2o5Change(e.target.value)}
+                      className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-semibold focus:ring-2 focus:ring-emerald-500 text-xs"
+                    />
+                  </div>
+
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="font-bold text-slate-800 dark:text-slate-200">
+                        Kadar K₂O (mg / 100 g tanah):
+                      </label>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                        {kStatus}
+                      </span>
+                    </div>
+                    <input
+                      type="number"
+                      placeholder="Contoh: 12.0 (<10 Rendah, 10-20 Sedang, >20 Tinggi)"
+                      value={k2oVal}
+                      onChange={(e) => handleK2oChange(e.target.value)}
+                      className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-semibold focus:ring-2 focus:ring-emerald-500 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Input Luas Petak Sawah Petani (Hektar) */}
+          {/* 5. INPUT LUAS PETAK SAWAH PETANI (HEKTAR) */}
           <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/80 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase">
-                Luas Petak Sawah Petani (Hektar):
+                Luas Petak Lahan Petani (Hektar):
               </label>
               <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400 font-mono">
                 {luas} ha ({Math.round(luas * 10000).toLocaleString('id-ID')} m²)
@@ -361,7 +509,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                 </span>
               </div>
 
-              {/* Tombol Cepat Pilihan Luas */}
+              {/* Tombol Cepat Luas */}
               <div className="flex items-center gap-1">
                 {[0.25, 0.5, 0.75, 1, 2].map((quickVal) => (
                   <button
@@ -379,54 +527,73 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                 ))}
               </div>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
-              *Rekomendasi di bawah otomatis menghitung kebutuhan riil untuk petak <strong>{luas} hektar</strong> sekaligus dosis baku per hektar.
-            </p>
           </div>
 
-          {/* Pilihan Target Dosis Urea Dasar */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
-              Target Dosis Urea Dasar (Target Hasil Panen):
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {[250, 300, 350].map((val) => (
-                <button
-                  key={val}
-                  type="button"
-                  onClick={() => setTargetUrea(val)}
-                  className={`p-2 rounded-xl border text-center transition flex flex-col items-center justify-center ${
-                    targetUrea === val
-                      ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 font-bold ring-2 ring-emerald-500/30'
-                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
-                  }`}
-                >
-                  <span className="text-xs">{val} kg/ha</span>
-                  <span className="text-[10px] text-slate-500">
-                    {val === 250 ? 'Kecamatan' : val === 300 ? 'Sedang' : 'Tinggi'}
+          {/* 6. TARGET HASIL UREA & FAKTOR JERAMI (KHUSUS PADI SAWAH METODE PUTS) */}
+          {jenisPadi === 'sawah' && metode === 'puts' && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
+                  Target Dosis Urea Dasar (Target Panen):
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[250, 300, 350].map((val) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setTargetUrea(val)}
+                      className={`p-2 rounded-xl border text-center transition flex flex-col items-center justify-center ${
+                        targetUrea === val
+                          ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 font-bold ring-2 ring-emerald-500/30'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      <span className="text-xs">{val} kg/ha</span>
+                      <span className="text-[9.5px] text-slate-500">
+                        {val === 250 ? '< 5 ton/ha' : val === 300 ? '5-6 ton/ha' : '> 6 ton/ha'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Faktor Jerami */}
+              <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hasStrawRecycled}
+                  onChange={(e) => setHasStrawRecycled(e.target.checked)}
+                  className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
+                />
+                <div className="text-[11px] leading-tight">
+                  <span className="font-bold text-emerald-900 dark:text-emerald-200">
+                    Pengembalian Jerami Padi Sawah (≥ 5 ton/ha)
                   </span>
-                </button>
-              ))}
+                  <p className="text-slate-600 dark:text-slate-400 text-[10px] mt-0.5">
+                    Daur ulang jerami mencukupi kebutuhan hara Kalium sehingga dosis pupuk KCl dikurangi hingga 0-50 kg/ha.
+                  </p>
+                </div>
+              </label>
             </div>
-          </div>
+          )}
 
-          {/* KOTAK HASIL REKOMENDASI DOSIS */}
+          {/* 7. KOTAK HASIL REKOMENDASI DOSIS */}
           <div className="space-y-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-emerald-600" />
-                <span>Rekomendasi Dosis Pupuk:</span>
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                <span>Hasil Rekomendasi Dosis ({jenisPadi === 'gogo' ? 'Padi Gogo' : 'Padi Sawah'}):</span>
               </h4>
               <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40">
                 Petak: {luas} ha
               </span>
             </div>
 
-            {/* Paket Tunggal */}
+            {/* OPSI A: PAKET PUPUK TUNGGAL */}
             <div className="p-3 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 space-y-2">
               <div className="font-bold text-emerald-900 dark:text-emerald-300 text-xs flex items-center justify-between">
                 <span>[OPSI A] Paket Pupuk Tunggal</span>
-                <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">Total Hara Lengkap</span>
+                <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">Total Hara Terpisah</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="p-2 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-xs border border-emerald-100 dark:border-emerald-900/50">
@@ -459,13 +626,14 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
               </div>
             </div>
 
-            {/* Paket Majemuk */}
+            {/* OPSI B: PAKET PUPUK MAJEMUK (SUBSTITUSI NPK 15-10-12) */}
             <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-800/60 space-y-2">
               <div className="font-bold text-blue-900 dark:text-blue-300 text-xs flex items-center justify-between">
                 <span>[OPSI B] Paket Pupuk Majemuk (Substitusi)</span>
                 <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-400">NPK 15-10-12</span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-center">
+              
+              <div className={`grid ${(hasil.majemuk.sp36Tambahan ?? 0) > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 text-center`}>
                 <div className="p-2 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-xs border border-blue-100 dark:border-blue-900/50">
                   <div className="text-[10px] text-slate-500 font-medium">NPK 15-10-12</div>
                   <div className="text-sm font-black text-blue-700 dark:text-blue-400 leading-tight">
@@ -475,6 +643,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                     {hasil.majemuk.npk} kg/ha
                   </div>
                 </div>
+                
                 <div className="p-2 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-xs border border-blue-100 dark:border-blue-900/50">
                   <div className="text-[10px] text-slate-500 font-medium">Urea Tambahan</div>
                   <div className="text-sm font-black text-blue-700 dark:text-blue-400 leading-tight">
@@ -484,7 +653,31 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                     {hasil.majemuk.ureaTambahan} kg/ha
                   </div>
                 </div>
+
+                {/* Komponen Ketiga Khusus Padi Gogo */}
+                {(hasil.majemuk.sp36Tambahan ?? 0) > 0 && (
+                  <div className="p-2 bg-amber-50 dark:bg-amber-950/80 rounded-xl shadow-xs border border-amber-300 dark:border-amber-700">
+                    <div className="text-[10px] text-amber-800 dark:text-amber-200 font-bold">SP-36 Tambahan</div>
+                    <div className="text-sm font-black text-amber-700 dark:text-amber-300 leading-tight">
+                      {((hasil.majemuk.sp36Tambahan ?? 0) * luas).toFixed(1).replace(/\.0$/, '')} <span className="text-[10px] font-normal">kg</span>
+                    </div>
+                    <div className="text-[9.5px] text-amber-600 dark:text-amber-400 mt-0.5 border-t border-amber-200 dark:border-amber-900 pt-0.5">
+                      {hasil.majemuk.sp36Tambahan} kg/ha
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Keterangan Bahasa Jelas untuk SP-36 Tambahan */}
+              {(hasil.majemuk.sp36Tambahan ?? 0) > 0 && (
+                <div className="p-2 bg-amber-100/70 dark:bg-amber-950/70 rounded-xl text-[10.5px] text-amber-900 dark:text-amber-200 flex items-start gap-1.5 border border-amber-300/50">
+                  <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                  <div>
+                    <strong>Pemberian Pupuk Tambahan:</strong> Petani harus memberikan <strong>SP-36 Tambahan</strong> sebanyak{' '}
+                    <strong>{((hasil.majemuk.sp36Tambahan ?? 0) * luas).toFixed(1).replace(/\.0$/, '')} kg</strong> (untuk petak {luas} ha) guna mencukupi defisit fosfat tanah masam.
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -493,7 +686,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <span className="font-bold">CATATAN PENTING: </span>
-              <span>Konsultasikan hasil ini dengan penyuluh (PPL) setempat.</span>
+              <span>Rekomendasi di atas mengacu pada {metode === 'permentan' ? 'Baku Tabel Lampiran A Permentan 13/2022' : jenisPadi === 'gogo' ? 'Panduan Terpadu PUTK / BRMP Padi Gogo' : 'Matriks Terpadu PUTS & Permentan 13/2022'}. Konsultasikan selalu dengan penyuluh (PPL) setempat.</span>
             </div>
           </div>
 
@@ -548,47 +741,57 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                 </button>
               </div>
 
-              {currentCoordinates && (
-                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-1 pt-0.5">
-                  <MapPin className="w-3 h-3 shrink-0" />
-                  <span>Titik Koordinat: {currentCoordinates[0].toFixed(5)}, {currentCoordinates[1].toFixed(5)}</span>
-                </div>
-              )}
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                Koordinat:{' '}
+                {currentCoordinates
+                  ? `${currentCoordinates[0].toFixed(5)}, ${currentCoordinates[1].toFixed(5)}`
+                  : 'Belum terdeteksi (Gunakan tombol GPS atau Ketuk Peta)'}
+              </div>
             </div>
 
-            {/* Catatan Tambahan (Opsional) */}
+            {/* Catatan Tambahan */}
             <div>
-              <input
-                type="text"
-                placeholder="Catatan tambahan (misal: Varietas Ciherang, Umur 15 HST)"
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                Catatan Kondisi Lahan (Opsional):
+              </label>
+              <textarea
+                rows={2}
+                placeholder="Contoh: Varietas Inpari 32, fase vegetatif awal, pengairan tadah hujan..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 text-[11px]"
+                className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500"
               />
             </div>
           </div>
         </div>
 
-        {/* Footer Save Action */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+        {/* Action Buttons Footer */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-2.5">
+          <button
+            onClick={onClose}
+            className="w-1/3 py-3 px-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl hover:bg-slate-200 text-xs transition"
+          >
+            Tutup
+          </button>
+
           <button
             onClick={handleSave}
             disabled={saveSuccess}
-            className={`w-full min-h-[52px] py-3.5 px-4 font-extrabold rounded-2xl shadow-xl transition flex items-center justify-center gap-2 text-sm ${
+            className={`flex-1 py-3 px-4 text-white font-extrabold rounded-2xl shadow-xl transition flex items-center justify-center gap-2 text-xs border ${
               saveSuccess
-                ? 'bg-emerald-600 text-white'
-                : 'bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-400'
+                ? 'bg-emerald-600 border-emerald-500'
+                : 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 border-emerald-500'
             }`}
           >
             {saveSuccess ? (
               <>
-                <CheckCircle2 className="w-5 h-5 text-white" />
-                <span>Titik Rekomendasi Tersimpan di Peta!</span>
+                <CheckCircle2 className="w-4 h-4 text-white animate-bounce" />
+                <span>Titik Berhasil Tersimpan!</span>
               </>
             ) : (
               <>
-                <Save className="w-5 h-5 text-white" />
-                <span>Simpan Rekomendasi ke Peta</span>
+                <Save className="w-4 h-4 text-white" />
+                <span>Simpan Titik Survei ke Peta</span>
               </>
             )}
           </button>
@@ -597,4 +800,3 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
     </div>
   );
 };
-

@@ -13,17 +13,21 @@ export function convertPointsToCSV(points: SurveyPoint[]): string {
     'Akurasi (m)',
     'Sumber Koordinat',
     'Kecamatan',
+    'Jenis Padi',
+    'Metode Rekomendasi',
     'Luas Petak (ha)',
     'Status P (PUTS/PUTK)',
     'Status K (PUTS/PUTK)',
     'P2O5 Laboratorium (mg/100g)',
     'K2O Laboratorium (mg/100g)',
     'Target Urea (kg/ha)',
+    'Daur Ulang Jerami',
     'Dosis Tunggal Urea (kg/ha)',
     'Dosis Tunggal SP-36 (kg/ha)',
     'Dosis Tunggal KCl (kg/ha)',
     'Dosis Majemuk NPK 15-10-12 (kg/ha)',
     'Dosis Majemuk Urea Tambahan (kg/ha)',
+    'Dosis Majemuk SP-36 Tambahan (kg/ha)',
     'Catatan Khusus',
   ];
 
@@ -36,17 +40,21 @@ export function convertPointsToCSV(points: SurveyPoint[]): string {
     p.accuracy ?? '',
     p.source,
     `"${p.kecamatan}"`,
+    p.jenisPadi === 'gogo' ? 'Padi Gogo/Kering' : 'Padi Sawah',
+    p.metodeRekomendasi ? p.metodeRekomendasi.toUpperCase() : 'PUTS',
     p.luasPetak ?? 1,
     p.pStatus,
     p.kStatus,
     p.p2o5Kuantitatif ?? '',
     p.k2oKuantitatif ?? '',
     p.targetUrea,
+    p.hasStrawRecycled ? 'Ya (>=5 ton)' : 'Tidak',
     p.tunggal.urea,
     p.tunggal.sp36,
     p.tunggal.kcl,
     p.majemuk.npk,
     p.majemuk.ureaTambahan,
+    p.majemuk.sp36Tambahan ?? 0,
     `"${(p.notes || '').replace(/"/g, '""')}"`,
   ]);
 
@@ -67,17 +75,21 @@ export function convertPointsToGeoJSON(points: SurveyPoint[]): string {
         surveyor: p.surveyorName,
         waktu: p.timestamp,
         kecamatan: p.kecamatan,
+        jenis_padi: p.jenisPadi ?? 'sawah',
+        metode_rekomendasi: p.metodeRekomendasi ?? 'puts',
         luas_petak_ha: p.luasPetak ?? 1,
         p_status: p.pStatus,
         k_status: p.kStatus,
         p2o5: p.p2o5Kuantitatif,
         k2o: p.k2oKuantitatif,
         target_urea: p.targetUrea,
+        jerami_daur_ulang: p.hasStrawRecycled ?? false,
         urea_tunggal: p.tunggal.urea,
         sp36_tunggal: p.tunggal.sp36,
         kcl_tunggal: p.tunggal.kcl,
         npk_majemuk: p.majemuk.npk,
         urea_majemuk: p.majemuk.ureaTambahan,
+        sp36_majemuk_tambahan: p.majemuk.sp36Tambahan ?? 0,
         akurasi_m: p.accuracy,
         sumber: p.source,
         catatan: p.notes,
@@ -150,35 +162,29 @@ export async function shareAllSurveyData(
 
       if (navigator.canShare({ files: [csvFile, geojsonFile] })) {
         await navigator.share({
-          title: `Data Survei Pupuk Presisi Padi (${points.length} Titik)`,
-          text: `Rekapan data rekomendasi pemupukan presisi padi (${points.length} titik lahan sawah) di Kab. Lampung Utara.`,
+          title: 'Data Survei Pupuk Presisi Padi Lampung Utara',
+          text: `Rekap ${points.length} titik survei pemupukan presisi padi (Permentan 13/2022).`,
           files: [csvFile, geojsonFile],
         });
-        return {
-          success: true,
-          message: `Berhasil membagikan ${points.length} titik survei via aplikasi${webhookStatus}!`,
-        };
+        return { success: true, message: `Berhasil dibagikan melalui Android Native Share${webhookStatus}.` };
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        console.warn('Web Share API file share failed, fallback to download:', err);
+        console.warn('Web Share API error, fallback to direct download:', err);
       } else {
-        return { success: true, message: 'Aksi berbagi dibatalkan oleh pengguna.' };
+        return { success: true, message: 'Berbagi data dibatalkan oleh pengguna.' };
       }
     }
   }
 
-  // 3. Fallback: Otomatis unduh file CSV dan GeoJSON
+  // 3. Fallback: Download file CSV & GeoJSON langsung
   triggerFileDownload(csvContent, `Survei_Pupuk_Presisi_${dateStr}.csv`, 'text/csv');
-  triggerFileDownload(
-    geojsonContent,
-    `Survei_Pupuk_Presisi_${dateStr}.geojson`,
-    'application/geo+json'
-  );
+  setTimeout(() => {
+    triggerFileDownload(geojsonContent, `Survei_Pupuk_Presisi_${dateStr}.geojson`, 'application/geo+json');
+  }, 400);
 
   return {
     success: true,
-    message: `File CSV & GeoJSON (${points.length} titik) berhasil diunduh${webhookStatus}. Anda dapat melampirkannya langsung ke WhatsApp Peneliti.`,
+    message: `Berkas CSV & GeoJSON berhasil diunduh ke perangkat Anda${webhookStatus}.`,
   };
 }
-
