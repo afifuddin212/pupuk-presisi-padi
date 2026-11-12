@@ -107,10 +107,29 @@ export const SurveyExportModal: React.FC<SurveyExportModalProps> = ({
   const isLibraryUrl = webhookUrl.includes('/macros/library/d/');
 
   // Kode Google Apps Script untuk disalin oleh pengguna
-  const googleAppsScriptCode = `function doPost(e) {
+  const googleAppsScriptCode = `// ID Spreadsheet target (telah dihubungkan ke spreadsheet peneliti)
+var SPREADSHEET_ID = "1NLCFggTT1XY1E9nhhzvrR8n77RyQw3aPhG2ICpj2vn4";
+
+function getTargetSpreadsheet() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (ss) return ss;
+  } catch (e) {}
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
+}
+
+// Respon GET untuk pengujian di browser (mencegah error 403 saat dicek)
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "ok",
+    message: "Webhook Rekomendasi Pemupukan Presisi Padi aktif dan siap menerima data survei!"
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
   try {
     var sheetName = "Data_Survei_Lapangan";
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getTargetSpreadsheet();
     var sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
     
     var headers = [
@@ -164,6 +183,14 @@ export const SurveyExportModal: React.FC<SurveyExportModalProps> = ({
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+// Jalankan fungsi ini 1x di editor Apps Script untuk memberikan izin otorisasi spreadsheet
+function testOtorisasiDanSimulasi() {
+  var ss = getTargetSpreadsheet();
+  var sheetName = "Data_Survei_Lapangan";
+  var sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
+  Logger.log("✅ SUKSES TERHUBUNG KE SPREADSHEET: " + ss.getName());
 }`;
 
   const handleCopyScript = () => {
