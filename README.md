@@ -36,6 +36,8 @@ Aplikasi mengintegrasikan 5 layer spasial terstandarisasi dengan arsitektur pop-
 4. **Peta Lahan Baku Sawah (LBS)**: Menampilkan sebaran petak sawah baku riil dengan garis batas pematang putih bersih dan 4 kelas simbologi (`Irigasi` `#059669`, `Tadah Hujan` `#65a30d`, `Rawa/Lebak` `#0284c7`, `Non Irigasi` `#d97706`).
 5. **Peta Satuan Peta Tanah (Jenis Tanah / SPT)**: Menggunakan simbologi ilmiah berdasarkan **Jenis Tanah Utama (`TANAH_1`)** dengan warna tanah alami berdaya kontras tinggi (*Latosol* Terakota `#9a3412`, *Kambisol* Cokelat Keemasan `#b45309`, *Litosol* Abu Mineral `#475569`, *Badan Air* `#0369a1`, *Lahan Terbangun* `#64748b`) dan menguraikan kode SPT, taksonomi USDA, tekstur tanah, pH, KTK, KB, relief, lereng, dan drainase saat diklik.
 
+Selain itu, aplikasi dilengkapi **Legenda Mengambang Dinamis (*Floating Mini-Legend Dock*)** di sudut kiri bawah peta yang otomatis menyajikan arti simbol warna layer yang sedang aktif secara ringkas tanpa mengganggu pandangan peta maupun zona sentuh jempol.
+
 ### 2. Lembar Informasi Terpadu (Unified Contextual Sheet)
 - **Bebas Crowding**: Klik pada peta memicu lembar informasi terpadu yang dapat beralih cepat antar mode (*Rekomendasi Pemupukan*, *Kesesuaian Lahan*, *Jenis Tanah SPT*) tanpa memunculkan banyak dialog yang saling bertumpuk.
 - **Deteksi Petak Sawah LBS**: Jika titik berada di dalam petak sawah baku, informasi jenis sawah dan luas petak langsung disematkan sebagai chip ringkas di bagian atas.

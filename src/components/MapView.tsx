@@ -75,6 +75,12 @@ export const MapView: React.FC<MapViewProps> = ({
   const onPolygonSelectRef = useRef(onPolygonSelect);
   onPolygonSelectRef.current = onPolygonSelect;
 
+  const onMapClickCoordinatesRef = useRef(onMapClickCoordinates);
+  onMapClickCoordinatesRef.current = onMapClickCoordinates;
+
+  const onKecamatanDetectedRef = useRef(onKecamatanDetected);
+  onKecamatanDetectedRef.current = onKecamatanDetected;
+
   const geoJsonDataRef = useRef(geoJsonData);
   geoJsonDataRef.current = geoJsonData;
 
@@ -166,15 +172,21 @@ export const MapView: React.FC<MapViewProps> = ({
     map.on('click', (e: L.LeafletMouseEvent) => {
       const lat = e.latlng.lat;
       const lng = e.latlng.lng;
-      onMapClickCoordinates([lat, lng]);
+
+      if (isPickingManualLocationRef.current) {
+        onMapClickCoordinatesRef.current?.([lat, lng]);
+        return;
+      }
+
+      onMapClickCoordinatesRef.current?.([lat, lng]);
 
       const gData = geoJsonDataRef.current;
       if (gData) {
         const kec = findKecamatanByPoint(lat, lng, gData);
         if (kec) {
-          onKecamatanDetected(kec.nama);
+          onKecamatanDetectedRef.current?.(kec.nama);
 
-          if (!isPickingManualLocationRef.current && onPolygonSelectRef.current) {
+          if (onPolygonSelectRef.current) {
             const feat = gData.features?.find(
               (f: any) => f.properties?.KECAMATAN?.toUpperCase() === kec.nama.toUpperCase()
             );
@@ -182,6 +194,10 @@ export const MapView: React.FC<MapViewProps> = ({
               triggerPolygonSelect(lat, lng, 'rekomendasi_padi', feat.properties);
             }
           }
+        } else {
+          // Klik di luar batas administrasi Lampung Utara: batalkan seleksi poligon aktif (Deselect)
+          onKecamatanDetectedRef.current?.('');
+          onPolygonSelectRef.current?.(null as any);
         }
       }
     });
@@ -336,8 +352,13 @@ export const MapView: React.FC<MapViewProps> = ({
           const lat = e.latlng.lat;
           const lng = e.latlng.lng;
           
-          onMapClickCoordinates([lat, lng]);
-          onKecamatanDetected(kec);
+          if (isPickingManualLocationRef.current) {
+            onMapClickCoordinatesRef.current?.([lat, lng]);
+            return;
+          }
+
+          onMapClickCoordinatesRef.current?.([lat, lng]);
+          onKecamatanDetectedRef.current?.(kec);
 
           triggerPolygonSelect(lat, lng, 'rekomendasi_padi', props);
         });
@@ -406,7 +427,13 @@ export const MapView: React.FC<MapViewProps> = ({
           L.DomEvent.stopPropagation(e);
           const lat = e.latlng.lat;
           const lng = e.latlng.lng;
-          onMapClickCoordinates([lat, lng]);
+
+          if (isPickingManualLocationRef.current) {
+            onMapClickCoordinatesRef.current?.([lat, lng]);
+            return;
+          }
+
+          onMapClickCoordinatesRef.current?.([lat, lng]);
           triggerPolygonSelect(lat, lng, 'kesesuaian', props);
         });
       },
@@ -449,7 +476,13 @@ export const MapView: React.FC<MapViewProps> = ({
           L.DomEvent.stopPropagation(e);
           const lat = e.latlng.lat;
           const lng = e.latlng.lng;
-          onMapClickCoordinates([lat, lng]);
+
+          if (isPickingManualLocationRef.current) {
+            onMapClickCoordinatesRef.current?.([lat, lng]);
+            return;
+          }
+
+          onMapClickCoordinatesRef.current?.([lat, lng]);
           triggerPolygonSelect(lat, lng, 'lbs', props);
         });
       },
@@ -494,7 +527,13 @@ export const MapView: React.FC<MapViewProps> = ({
           L.DomEvent.stopPropagation(e);
           const lat = e.latlng.lat;
           const lng = e.latlng.lng;
-          onMapClickCoordinates([lat, lng]);
+
+          if (isPickingManualLocationRef.current) {
+            onMapClickCoordinatesRef.current?.([lat, lng]);
+            return;
+          }
+
+          onMapClickCoordinatesRef.current?.([lat, lng]);
           triggerPolygonSelect(lat, lng, 'spt', props);
         });
       },

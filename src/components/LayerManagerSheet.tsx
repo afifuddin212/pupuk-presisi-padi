@@ -190,7 +190,7 @@ export const LayerManagerSheet: React.FC<LayerManagerSheetProps> = ({
                           )}
                           {layer.id === 'inasoilagro' && (
                             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                              Status Makro P: Rendah, K: Tinggi (Seragam 23 Kecamatan)
+                              Status Makro P: Rendah, K: Tinggi
                             </span>
                           )}
                         </div>

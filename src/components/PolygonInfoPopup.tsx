@@ -229,7 +229,7 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                     Informasi Wilayah Terpilih
                   </span>
                   {info.layerSource && (
-                    <span className="text-[9px] font-semibold px-2 py-0.2 bg-slate-200 dark:bg-slate-750 text-slate-700 dark:text-slate-300 rounded-full">
+                    <span className="text-[9px] font-semibold px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full">
                       {info.layerSource === 'kesesuaian' ? 'Kesesuaian Lahan' : info.layerSource === 'spt' ? 'Jenis Tanah' : 'Pemupukan'}
                     </span>
                   )}
@@ -580,10 +580,10 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
               </div>
 
               {/* Kartu Status Kesesuaian */}
-              <div className="p-4 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-slate-400">
+                    <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
                       Kelas Kesesuaian Lahan
                     </div>
                     <div className="text-base font-black flex items-center gap-2 mt-0.5">
@@ -591,7 +591,7 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                         className="w-3.5 h-3.5 rounded-full inline-block border border-black/30 shadow-2xs"
                         style={{ backgroundColor: parsedKesesuaian.kelasColor }}
                       />
-                      <span className="text-slate-900 dark:text-white">
+                      <span className={parsedKesesuaian.kelas === 'null' ? 'text-slate-700 dark:text-slate-300' : 'text-slate-900 dark:text-white'}>
                         {parsedKesesuaian.kelasLabel}
                       </span>
                     </div>
@@ -601,19 +601,24 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                   </span>
                 </div>
 
-                <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   {KELAS_KESESUAIAN_MAP[parsedKesesuaian.kelas]?.desc || 'Status evaluasi biofisik lahan.'}
                 </p>
 
                 {/* Faktor Pembatas */}
-                <div className="pt-2 border-t border-slate-200/80 dark:border-slate-750">
+                <div className="pt-2 border-t border-slate-200/80 dark:border-slate-700">
                   <div className="text-[10.5px] font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300 mb-2">
                     Faktor Pembatas Biofisik ({parsedKesesuaian.faktorList.length}):
                   </div>
 
-                  {parsedKesesuaian.faktorList.length === 0 ? (
-                    <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200/70 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  {parsedKesesuaian.kelas === 'null' ? (
+                    <div className="p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-300 dark:border-slate-700 text-[11px] text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                      <Info className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                      <span>Tidak dievaluasi parameter biofisiknya (bukan peruntukan komoditas padi ini).</span>
+                    </div>
+                  ) : parsedKesesuaian.faktorList.length === 0 ? (
+                    <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl border border-emerald-200/70 dark:border-emerald-800 text-[11px] text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span>Tidak ada faktor pembatas mayor yang terdeteksi untuk komoditas ini.</span>
                     </div>
                   ) : (
@@ -621,7 +626,7 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                       {parsedKesesuaian.faktorList.map((f, idx) => (
                         <div
                           key={idx}
-                          className="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/90 dark:border-slate-700 flex items-start gap-2 text-xs"
+                          className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-700 flex items-start gap-2 text-xs"
                         >
                           <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 font-mono font-bold rounded text-[10px] shrink-0 mt-0.5">
                             {f.kode}
@@ -668,7 +673,7 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
               </div>
 
               {/* Kartu Klasifikasi Tanah */}
-              <div className="p-4 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${soilGroup.badgeBg} ${soilGroup.badgeText}`}>
@@ -686,12 +691,12 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                   </span>
                 </div>
 
-                <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   {soilGroup.deskripsi}
                 </p>
 
                 {/* Sifat Kimia & Kesuburan Tanah */}
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-750">
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
                   <div className="text-[10.5px] font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300 mb-2">
                     Sifat Kimia &amp; Kesuburan:
                   </div>
@@ -724,7 +729,7 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                 </div>
 
                 {/* Sifat Fisik & Fisiografi */}
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-750">
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
                   <div className="text-[10.5px] font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300 mb-2">
                     Fisiografi &amp; Morfologi Lingkungan:
                   </div>

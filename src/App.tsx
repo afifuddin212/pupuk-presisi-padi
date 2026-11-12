@@ -7,6 +7,7 @@ import { HelpModal } from './components/HelpModal';
 import { SurveyPointPopup } from './components/SurveyPointPopup';
 import { SurveyExportModal } from './components/SurveyExportModal';
 import { PolygonInfoPopup } from './components/PolygonInfoPopup';
+import { FloatingMiniLegend } from './components/FloatingMiniLegend';
 import { LayerItem, SurveyPoint, PolygonFeatureInfo, HaraStatus, JenisPadi, MetodeRekomendasi } from './types';
 import { 
   getAllSurveyPoints, 
@@ -76,7 +77,7 @@ export function App() {
       active: true,
       available: true,
       filename: 'batas-admin-kecamatan.geojson',
-      legend: [{ label: 'Garis Batas Wilayah (Hitam Putus-putus)', color: '#0f172a' }],
+      legend: [{ label: 'Garis Batas Wilayah', color: '#0f172a' }],
     },
     {
       id: 'inasoilagro',
@@ -85,8 +86,8 @@ export function App() {
       available: true,
       filename: 'rekomendasi_pupuk_padi_lampura.geojson',
       legend: [
-        { label: 'Status Makro: P Rendah, K Tinggi (Seragam 23 Kec.)', color: '#059669' },
-        { label: 'Kecamatan Terpilih (Highlight Emas)', color: '#f59e0b' },
+        { label: 'Status Makro: P Rendah, K Tinggi', color: '#059669' },
+        { label: 'Kecamatan Terpilih', color: '#f59e0b' },
       ],
     },
     {
@@ -320,9 +321,13 @@ export function App() {
     }
   }, [pickedLocation, userLocation, geoJsonData]);
 
+  // Ref untuk state manual pick guna menjamin pembacaan state paling segar
+  const isPickingManualLocationRef = useRef(isPickingManualLocation);
+  isPickingManualLocationRef.current = isPickingManualLocation;
+
   // Handler Klik Koordinat di Peta (Mendukung Manual Pick di Bidang Sawah)
   const handleMapClick = (coords: [number, number]) => {
-    if (isPickingManualLocation) {
+    if (isPickingManualLocationRef.current || isPickingManualLocation) {
       setPickedLocation(coords);
       if (geoJsonData) {
         const kec = findKecamatanByPoint(coords[0], coords[1], geoJsonData);
@@ -390,7 +395,15 @@ export function App() {
         centerTrigger={centerTrigger}
       />
 
-      {/* 2. Floating Heads-Up Display (HUD) */}
+      {/* 2. Floating Mini Legend untuk Layer Tematik Aktif */}
+      <FloatingMiniLegend
+        layers={layers}
+        subTypeKesesuaian={subTypeKesesuaian}
+        isDarkMode={isDarkMode}
+        onOpenLayers={() => setIsLayersOpen(true)}
+      />
+
+      {/* 3. Floating Heads-Up Display (HUD) */}
       <FloatingHUD
         isDarkMode={isDarkMode}
         onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
