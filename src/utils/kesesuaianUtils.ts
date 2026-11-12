@@ -2,6 +2,8 @@ export interface KesesuaianDetail {
   kelas: 'S1' | 'S2' | 'S3' | 'N' | 'null';
   kelasLabel: string;
   kelasColor: string;
+  badgeBg: string;
+  badgeText: string;
   faktorList: Array<{
     kode: string;
     nama: string;
@@ -60,34 +62,45 @@ export const FAKTOR_PEMBATAS_MAP: Record<string, { nama: string; deskripsi: stri
   },
 };
 
+// Palet Outdoor High-Contrast: Bebas ambiguitas (null tidak pernah putih/transparan kosong)
 export const KELAS_KESESUAIAN_MAP: Record<
   string,
-  { label: string; color: string; desc: string }
+  { label: string; color: string; desc: string; badgeBg: string; badgeText: string }
 > = {
   S1: {
     label: 'S1 - Sangat Sesuai',
-    color: '#1a9850',
+    color: '#15803d', // Deep Emerald Green
+    badgeBg: 'bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-400 dark:border-emerald-700',
+    badgeText: 'text-emerald-950 dark:text-emerald-200 font-bold',
     desc: 'Lahan tidak mempunyai faktor pembatas yang berarti atau hanya memiliki pembatas minor yang tidak berpengaruh nyata terhadap produktivitas.',
   },
   S2: {
     label: 'S2 - Cukup Sesuai',
-    color: '#a6d96a',
+    color: '#65a30d', // High-Contrast Lime/Olive
+    badgeBg: 'bg-lime-100 dark:bg-lime-950/80 border border-lime-400 dark:border-lime-700',
+    badgeText: 'text-lime-950 dark:text-lime-200 font-bold',
     desc: 'Lahan mempunyai faktor pembatas agak berat yang dapat menurunkan produktivitas atau memerlukan tambahan masukan.',
   },
   S3: {
     label: 'S3 - Sesuai Marginal',
-    color: '#fee08b',
+    color: '#d97706', // High-Contrast Warm Amber Gold
+    badgeBg: 'bg-amber-100 dark:bg-amber-950/80 border border-amber-400 dark:border-amber-700',
+    badgeText: 'text-amber-950 dark:text-amber-200 font-bold',
     desc: 'Lahan mempunyai faktor pembatas berat yang sangat membatasi produksi atau memerlukan biaya input pengelolaan yang tinggi.',
   },
   N: {
     label: 'N - Tidak Sesuai',
-    color: '#d73027',
+    color: '#dc2626', // High-Contrast Vivid Red
+    badgeBg: 'bg-red-100 dark:bg-red-950/80 border border-red-400 dark:border-red-700',
+    badgeText: 'text-red-950 dark:text-red-200 font-bold',
     desc: 'Lahan mempunyai faktor pembatas sangat permanen atau parah yang tidak memungkinkan produksi tanaman padi secara ekonomis.',
   },
   null: {
     label: 'Tidak Dinilai',
-    color: '#94a3b8',
-    desc: 'Komoditas tidak dinilai pada poligon delineasi ini.',
+    color: '#64748b', // Slate Grey Bertekstur (Bukan Putih / Bukan Kosong)
+    badgeBg: 'bg-slate-200 dark:bg-slate-800 border border-slate-400 dark:border-slate-600',
+    badgeText: 'text-slate-900 dark:text-slate-200 font-bold',
+    desc: 'Komoditas tidak dinilai pada poligon delineasi ini (area non-sawah / bukan target evaluasi padi).',
   },
 };
 
@@ -99,7 +112,9 @@ export function parseKesesuaianString(val: string | null | undefined): Kesesuaia
     return {
       kelas: 'null',
       kelasLabel: 'Tidak Dinilai',
-      kelasColor: '#94a3b8',
+      kelasColor: '#64748b',
+      badgeBg: 'bg-slate-200 dark:bg-slate-800 border border-slate-400 dark:border-slate-600',
+      badgeText: 'text-slate-900 dark:text-slate-200 font-bold',
       faktorList: [],
     };
   }
@@ -130,6 +145,8 @@ export function parseKesesuaianString(val: string | null | undefined): Kesesuaia
     kelas,
     kelasLabel: kelasInfo.label,
     kelasColor: kelasInfo.color,
+    badgeBg: kelasInfo.badgeBg,
+    badgeText: kelasInfo.badgeText,
     faktorList,
   };
 }

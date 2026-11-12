@@ -262,14 +262,16 @@ export const MapView: React.FC<MapViewProps> = ({
     const isActive = isLayerActive('batas_desa');
     if (!isActive || !adminBoundariesData) return;
 
+    // Batas Administrasi: Outline tajam kontras tinggi (Chalk white pada dark mode, dark jet slate pada light/satellite)
+    // Tanpa fill (fill: false) agar citra satelit dan jalan tidak terhalang
     const layer = L.geoJSON(adminBoundariesData, {
       style: () => ({
-        fill: false, // TIDAK ADA FILL
+        fill: false,
         fillOpacity: 0,
-        color: isDarkMode ? '#94a3b8' : '#334155',
-        weight: 1.8,
-        dashArray: '4, 4',
-        opacity: 0.85,
+        color: isDarkMode ? '#f8fafc' : '#0f172a',
+        weight: 2.2,
+        dashArray: '6, 4',
+        opacity: 0.95,
         interactive: false, // Tidak mengganggu klik poligon tematik di bawahnya
       }),
     }).addTo(map);
@@ -298,22 +300,24 @@ export const MapView: React.FC<MapViewProps> = ({
         const isSelected = selectedKecamatan && kecName.toUpperCase() === selectedKecamatan.toUpperCase();
 
         if (isSelected) {
+          // Highlight emas menyala berbingkai tegas saat poligon dipilih
           return {
-            fillColor: '#facc15',
-            fillOpacity: isDarkMode ? 0.45 : 0.4,
-            color: '#eab308',
+            fillColor: '#f59e0b',
+            fillOpacity: isDarkMode ? 0.52 : 0.46,
+            color: '#b45309',
             weight: 3.5,
             opacity: 1,
             dashArray: '',
           };
         }
 
+        // Tampilan hijau zamrud serasi brand aplikasi dengan kontras outdoor yang solid
         return {
-          fillColor: '#10b981',
-          fillOpacity: isDarkMode ? 0.16 : 0.12, // Transparan lembut agar satelit tetap terbaca
-          color: isDarkMode ? '#34d399' : '#059669',
-          weight: 1.2,
-          opacity: 0.7,
+          fillColor: '#059669',
+          fillOpacity: isDarkMode ? 0.26 : 0.22,
+          color: isDarkMode ? '#34d399' : '#047857',
+          weight: 1.8,
+          opacity: 0.9,
         };
       },
       onEachFeature: (feature, polyLayer) => {
@@ -363,23 +367,37 @@ export const MapView: React.FC<MapViewProps> = ({
         const rawVal = feature?.properties?.[subTypeKesesuaian];
         const kelas = rawVal ? rawVal.trim().split(' ')[0] : 'null';
 
-        let fillColor = '#94a3b8';
+        let fillColor = '#64748b';
         let fillOpacity = 0.55;
+        let color = isDarkMode ? '#0f172a' : '#1e293b';
+        let weight = 1.4;
+        let dashArray = '';
 
-        if (kelas === 'S1') fillColor = '#1a9850';
-        else if (kelas === 'S2') fillColor = '#a6d96a';
-        else if (kelas === 'S3') fillColor = '#fee08b';
-        else if (kelas === 'N') fillColor = '#d73027';
-        else {
-          fillOpacity = 0; // null tidak dinilai transparan
+        if (kelas === 'S1') {
+          fillColor = '#15803d'; // Hijau Zamrud Tua (Sangat Sesuai)
+        } else if (kelas === 'S2') {
+          fillColor = '#65a30d'; // Hijau Limau/Zaitun Cerah (Cukup Sesuai)
+        } else if (kelas === 'S3') {
+          fillColor = '#d97706'; // Kuning Keemasan / Amber Hangat (Sesuai Marginal)
+        } else if (kelas === 'N') {
+          fillColor = '#dc2626'; // Merah Tegas (Tidak Sesuai)
+        } else {
+          // 'null' (Tidak Dinilai): JANGAN PERNAH PUTIH / TRANSPARAN KOSONG!
+          // Gunakan slate bertekstur garis putus-putus agar TIDAK AMBIGU dengan latar belakang peta/satelit
+          fillColor = '#64748b';
+          fillOpacity = isDarkMode ? 0.32 : 0.25;
+          color = isDarkMode ? '#94a3b8' : '#475569';
+          weight = 1.2;
+          dashArray = '4, 4';
         }
 
         return {
           fillColor,
           fillOpacity,
-          color: fillOpacity === 0 ? 'transparent' : '#475569',
-          weight: 0.8,
-          opacity: 0.7,
+          color,
+          weight,
+          dashArray,
+          opacity: 0.9,
         };
       },
       onEachFeature: (feature, polyLayer) => {
@@ -419,10 +437,10 @@ export const MapView: React.FC<MapViewProps> = ({
 
         return {
           fillColor: color,
-          fillOpacity: 0.65,
-          color: '#ffffff',
-          weight: 0.6,
-          opacity: 0.9,
+          fillOpacity: 0.72,
+          color: '#ffffff', // Garis batas putih bersih (pematang sawah tegas di atas citra satelit)
+          weight: 1.2,
+          opacity: 0.95,
         };
       },
       onEachFeature: (feature, polyLayer) => {
@@ -459,13 +477,15 @@ export const MapView: React.FC<MapViewProps> = ({
       style: (feature) => {
         const tanah = feature?.properties?.TANAH_1;
         const group = getSoilGroupInfo(tanah);
+        const isBuiltOrNull = group.color === '#64748b';
 
         return {
           fillColor: group.color,
-          fillOpacity: 0.5,
-          color: '#334155',
-          weight: 1.2,
-          opacity: 0.8,
+          fillOpacity: isBuiltOrNull ? 0.35 : 0.52,
+          color: isDarkMode ? '#0f172a' : '#1e293b',
+          weight: 1.5,
+          dashArray: isBuiltOrNull ? '4, 4' : '', // Garis putus-putus untuk area terbangun / non-tanah
+          opacity: 0.9,
         };
       },
       onEachFeature: (feature, polyLayer) => {

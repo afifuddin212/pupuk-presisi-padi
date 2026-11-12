@@ -588,7 +588,7 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                     </div>
                     <div className="text-base font-black flex items-center gap-2 mt-0.5">
                       <span
-                        className="w-3.5 h-3.5 rounded-full inline-block border border-black/20"
+                        className="w-3.5 h-3.5 rounded-full inline-block border border-black/30 shadow-2xs"
                         style={{ backgroundColor: parsedKesesuaian.kelasColor }}
                       />
                       <span className="text-slate-900 dark:text-white">
@@ -596,8 +596,8 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                       </span>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    Kode: {rawKesesuaianVal || 'null'}
+                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${parsedKesesuaian.badgeBg} ${parsedKesesuaian.badgeText}`}>
+                    {rawKesesuaianVal ? `Kode: ${rawKesesuaianVal}` : 'Tidak Dinilai (null)'}
                   </span>
                 </div>
 

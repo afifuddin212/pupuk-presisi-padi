@@ -68,7 +68,7 @@ export function App() {
     targetUrea?: number;
   }>({});
 
-  // Daftar Layer Spasial & Simbologi
+  // Daftar Layer Spasial & Simbologi Outdoor High-Contrast
   const [layers, setLayers] = useState<LayerItem[]>([
     {
       id: 'batas_desa',
@@ -76,7 +76,7 @@ export function App() {
       active: true,
       available: true,
       filename: 'batas-admin-kecamatan.geojson',
-      legend: [{ label: 'Garis Batas Wilayah (Tanpa Fill)', color: '#334155' }],
+      legend: [{ label: 'Garis Batas Wilayah (Hitam Putus-putus)', color: '#0f172a' }],
     },
     {
       id: 'inasoilagro',
@@ -85,8 +85,8 @@ export function App() {
       available: true,
       filename: 'rekomendasi_pupuk_padi_lampura.geojson',
       legend: [
-        { label: 'Status Makro: P Rendah, K Tinggi (Seragam 23 Kec.)', color: '#10b981' },
-        { label: 'Kecamatan Terpilih (Highlight)', color: '#facc15' },
+        { label: 'Status Makro: P Rendah, K Tinggi (Seragam 23 Kec.)', color: '#059669' },
+        { label: 'Kecamatan Terpilih (Highlight Emas)', color: '#f59e0b' },
       ],
     },
     {
@@ -97,10 +97,11 @@ export function App() {
       filename: 'kesesuaian-lahan-lampura.geojson',
       subType: 'KSI',
       legend: [
-        { label: 'S1 (Sangat Sesuai)', color: '#1a9850' },
-        { label: 'S2 (Cukup Sesuai)', color: '#a6d96a' },
-        { label: 'S3 (Sesuai Marginal)', color: '#fee08b' },
-        { label: 'N (Tidak Sesuai)', color: '#d73027' },
+        { label: 'S1 (Sangat Sesuai)', color: '#15803d' },
+        { label: 'S2 (Cukup Sesuai)', color: '#65a30d' },
+        { label: 'S3 (Sesuai Marginal)', color: '#d97706' },
+        { label: 'N (Tidak Sesuai)', color: '#dc2626' },
+        { label: 'Tidak Dinilai (Abu-abu Bergaris)', color: '#64748b' },
       ],
     },
     {
@@ -110,10 +111,10 @@ export function App() {
       available: true,
       filename: 'lahan-baku-sawah_lampura.geojson',
       legend: [
-        { label: 'Irigasi', color: '#16a34a' },
-        { label: 'Tadah Hujan', color: '#84cc16' },
-        { label: 'Rawa / Lebak', color: '#06b6d4' },
-        { label: 'Non Irigasi', color: '#f59e0b' },
+        { label: 'Irigasi', color: '#059669' },
+        { label: 'Tadah Hujan', color: '#65a30d' },
+        { label: 'Rawa / Lebak', color: '#0284c7' },
+        { label: 'Non Irigasi', color: '#d97706' },
       ],
     },
     {
@@ -123,10 +124,11 @@ export function App() {
       available: true,
       filename: 'spt-lampura.geojson',
       legend: [
-        { label: 'Latosol (Umbrik, Kromik, Haplik, Oksik)', color: '#c2410c' },
-        { label: 'Kambisol (Gleik, Distrik, Kromik)', color: '#eab308' },
-        { label: 'Litosol (Berbatu Dangkal)', color: '#64748b' },
-        { label: 'Lahan Terbangun / Air', color: '#94a3b8' },
+        { label: 'Latosol (Tanah Merah Cokelat)', color: '#9a3412' },
+        { label: 'Kambisol (Tanah Cokelat Keemasan)', color: '#b45309' },
+        { label: 'Litosol (Berbatu Dangkal)', color: '#475569' },
+        { label: 'Badan Air', color: '#0369a1' },
+        { label: 'Lahan Terbangun / Non-Tanah', color: '#64748b' },
       ],
     },
   ]);

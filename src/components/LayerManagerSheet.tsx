@@ -241,17 +241,26 @@ export const LayerManagerSheet: React.FC<LayerManagerSheetProps> = ({
                     {/* Legenda Dinamis jika Layer Aktif */}
                     {layer.active && layer.legend && layer.legend.length > 0 && (
                       <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap gap-2 text-[10px]">
-                        {layer.legend.map((leg, idx) => (
-                          <div key={idx} className="flex items-center gap-1.5">
-                            <span
-                              className="w-3 h-3 rounded-sm border border-black/20 shrink-0"
-                              style={{ backgroundColor: leg.color }}
-                            />
-                            <span className="text-slate-600 dark:text-slate-300 font-medium">
-                              {leg.label}
-                            </span>
-                          </div>
-                        ))}
+                        {layer.legend.map((leg, idx) => {
+                          const isDashed = leg.label.includes('Garis') || leg.label.includes('Bergaris');
+                          return (
+                            <div key={idx} className="flex items-center gap-1.5">
+                              <span
+                                className={`w-3.5 h-3.5 rounded-sm shrink-0 ${
+                                  isDashed
+                                    ? 'border-2 border-dashed border-slate-700 dark:border-slate-300'
+                                    : 'border border-black/30 shadow-2xs'
+                                }`}
+                                style={{
+                                  backgroundColor: isDashed && leg.label.includes('Garis Batas') ? 'transparent' : leg.color,
+                                }}
+                              />
+                              <span className="text-slate-700 dark:text-slate-200 font-semibold">
+                                {leg.label}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
