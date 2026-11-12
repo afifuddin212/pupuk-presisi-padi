@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Layers, Check, Download, HardDriveDownload, Sparkles } from 'lucide-react';
+import { X, Layers, Check, Download, HardDriveDownload, Sparkles, Loader2, Sprout, MapPin } from 'lucide-react';
 import { LayerItem } from '../types';
 
 interface LayerManagerSheetProps {
@@ -9,6 +9,9 @@ interface LayerManagerSheetProps {
   onToggleLayer: (id: string) => void;
   activeBasemap: 'osm' | 'satellite';
   onChangeBasemap: (type: 'osm' | 'satellite') => void;
+  subTypeKesesuaian?: 'KSI' | 'KSH' | 'KPG';
+  onChangeSubTypeKesesuaian?: (type: 'KSI' | 'KSH' | 'KPG') => void;
+  loadingLayerId?: string | null;
 }
 
 export const LayerManagerSheet: React.FC<LayerManagerSheetProps> = ({
@@ -18,6 +21,9 @@ export const LayerManagerSheet: React.FC<LayerManagerSheetProps> = ({
   onToggleLayer,
   activeBasemap,
   onChangeBasemap,
+  subTypeKesesuaian = 'KSI',
+  onChangeSubTypeKesesuaian,
+  loadingLayerId,
 }) => {
   const [caching, setCaching] = useState(false);
   const [cachedSuccess, setCachedSuccess] = useState(false);
@@ -27,7 +33,6 @@ export const LayerManagerSheet: React.FC<LayerManagerSheetProps> = ({
   const handleCacheTiles = () => {
     setCaching(true);
     setCachedSuccess(false);
-    // Simulasi caching tiles offline
     setTimeout(() => {
       setCaching(false);
       setCachedSuccess(true);
@@ -49,7 +54,7 @@ export const LayerManagerSheet: React.FC<LayerManagerSheetProps> = ({
             <div className="flex items-center gap-2">
               <Layers className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Manajemen Layer &amp; Peta
+                Manajemen Layer &amp; Peta Tematik
               </h3>
             </div>
             <button
@@ -143,59 +148,115 @@ export const LayerManagerSheet: React.FC<LayerManagerSheetProps> = ({
             </button>
           </div>
 
-          {/* Checklist Layer Tematik */}
+          {/* Checklist Layer Tematik & Overlay */}
           <div>
-            <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] mb-2.5 text-slate-500">
-              Layer Tematik Spasial (GeoJSON):
-            </h4>
-            <div className="space-y-2.5">
-              {layers.map((layer) => (
-                <div
-                  key={layer.id}
-                  className={`p-3 rounded-2xl border transition ${
-                    layer.active
-                      ? 'border-emerald-500 bg-white dark:bg-slate-800 shadow-sm'
-                      : 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 opacity-75'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-3 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={layer.active}
-                        onChange={() => onToggleLayer(layer.id)}
-                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-700"
-                      />
-                      <span className="font-semibold text-slate-900 dark:text-white text-xs">
-                        {layer.name}
-                      </span>
-                    </label>
+            <div className="flex items-center justify-between mb-2.5">
+              <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] text-slate-500">
+                Layer Spasial &amp; Simbologi Peta:
+              </h4>
+              <span className="text-[10px] text-slate-400 italic">
+                Ketuk poligon peta untuk rincian
+              </span>
+            </div>
 
-                    {!layer.available && (
-                      <span className="text-[10px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
-                        Menunggu Data
-                      </span>
+            <div className="space-y-3">
+              {layers.map((layer) => {
+                const isLoading = loadingLayerId === layer.id;
+
+                return (
+                  <div
+                    key={layer.id}
+                    className={`p-3.5 rounded-2xl border transition ${
+                      layer.active
+                        ? 'border-emerald-500 bg-white dark:bg-slate-800 shadow-sm ring-1 ring-emerald-500/20'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 opacity-80'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-3 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={layer.active}
+                          onChange={() => onToggleLayer(layer.id)}
+                          disabled={isLoading}
+                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-700"
+                        />
+                        <div>
+                          <span className="font-bold text-slate-900 dark:text-white text-xs block">
+                            {layer.name}
+                          </span>
+                          {layer.id === 'batas_desa' && (
+                            <span className="text-[10px] text-slate-400">Outline garis batas poligon tanpa fill</span>
+                          )}
+                          {layer.id === 'inasoilagro' && (
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                              Status Makro P: Rendah, K: Tinggi (Seragam 23 Kecamatan)
+                            </span>
+                          )}
+                        </div>
+                      </label>
+
+                      {isLoading ? (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-300">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Memuat...</span>
+                        </span>
+                      ) : !layer.available ? (
+                        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                          Menunggu Data
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {/* Sub-selector khusus layer Kesesuaian Lahan jika aktif */}
+                    {layer.id === 'kesesuaian' && layer.active && onChangeSubTypeKesesuaian && (
+                      <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60">
+                        <div className="text-[10px] font-bold text-slate-500 mb-1.5 flex items-center gap-1">
+                          <Sprout className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Komoditas yang Diwarnai di Peta:</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl">
+                          {[
+                            { id: 'KSI', label: 'Padi Irigasi' },
+                            { id: 'KSH', label: 'Tadah Hujan' },
+                            { id: 'KPG', label: 'Padi Gogo' },
+                          ].map((sub) => (
+                            <button
+                              key={sub.id}
+                              type="button"
+                              onClick={() => onChangeSubTypeKesesuaian(sub.id as any)}
+                              className={`py-1 px-1.5 rounded-lg text-[10.5px] font-bold transition ${
+                                subTypeKesesuaian === sub.id
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                              }`}
+                            >
+                              {sub.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Legenda Dinamis jika Layer Aktif */}
+                    {layer.active && layer.legend && layer.legend.length > 0 && (
+                      <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap gap-2 text-[10px]">
+                        {layer.legend.map((leg, idx) => (
+                          <div key={idx} className="flex items-center gap-1.5">
+                            <span
+                              className="w-3 h-3 rounded-sm border border-black/20 shrink-0"
+                              style={{ backgroundColor: leg.color }}
+                            />
+                            <span className="text-slate-600 dark:text-slate-300 font-medium">
+                              {leg.label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-
-                  {/* Legenda Dinamis jika Layer Aktif */}
-                  {layer.active && layer.legend && layer.legend.length > 0 && (
-                    <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap gap-2 text-[10px]">
-                      {layer.legend.map((leg, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5">
-                          <span
-                            className="w-3 h-3 rounded-sm border border-black/20"
-                            style={{ backgroundColor: leg.color }}
-                          />
-                          <span className="text-slate-600 dark:text-slate-300 font-medium">
-                            {leg.label}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -213,4 +274,3 @@ export const LayerManagerSheet: React.FC<LayerManagerSheetProps> = ({
     </div>
   );
 };
-

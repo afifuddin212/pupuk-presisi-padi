@@ -64,6 +64,7 @@ export interface LayerItem {
   active: boolean;
   available: boolean;
   filename?: string;
+  subType?: string; // e.g. 'KSI' | 'KSH' | 'KPG' for kesesuaian lahan
   legend: Array<{
     label: string;
     color: string;
@@ -76,4 +77,8 @@ export interface PolygonFeatureInfo {
   provinsi: string;
   properties: any;
   coordinates?: [number, number];
+  layerSource?: 'rekomendasi_padi' | 'kesesuaian' | 'spt' | 'lbs';
+  kesesuaianProps?: any;
+  sptProps?: any;
+  lbsProps?: any;
 }

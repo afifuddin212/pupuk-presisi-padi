@@ -37,6 +37,30 @@ export function findKecamatanByPoint(
 }
 
 /**
+ * Mencari poligon pertama yang memuat titik lat, lng di dataset apapun
+ */
+export function findFeatureByPoint(
+  lat: number,
+  lng: number,
+  geoJsonData: any
+): any | null {
+  if (!geoJsonData || !geoJsonData.features) return null;
+
+  const pt = point([lng, lat]);
+
+  for (const feature of geoJsonData.features) {
+    try {
+      if (booleanPointInPolygon(pt, feature)) {
+        return feature;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+  return null;
+}
+
+/**
  * Mengambil daftar seluruh nama kecamatan yang ada dalam file GeoJSON
  */
 export function getAllKecamatanList(geoJsonData: any): string[] {
@@ -46,4 +70,3 @@ export function getAllKecamatanList(geoJsonData: any): string[] {
   ).filter(Boolean);
   return Array.from(new Set(list)).sort() as string[];
 }
-

@@ -1,10 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { LayerItem, SurveyPoint, PolygonFeatureInfo } from '../types';
-import { findKecamatanByPoint } from '../utils/spatialUtils';
+import { findKecamatanByPoint, findFeatureByPoint } from '../utils/spatialUtils';
+import { getSoilGroupInfo } from '../utils/sptUtils';
+import { getLbsColor } from '../utils/lbsUtils';
 
 interface MapViewProps {
   geoJsonData: any;
+  adminBoundariesData?: any;
+  kesesuaianData?: any;
+  subTypeKesesuaian?: 'KSI' | 'KSH' | 'KPG';
+  lbsData?: any;
+  sptData?: any;
   activeBasemap: 'osm' | 'satellite';
   layers: LayerItem[];
   userLocation: [number, number] | null;
@@ -24,6 +31,11 @@ interface MapViewProps {
 
 export const MapView: React.FC<MapViewProps> = ({
   geoJsonData,
+  adminBoundariesData,
+  kesesuaianData,
+  subTypeKesesuaian = 'KSI',
+  lbsData,
+  sptData,
   activeBasemap,
   layers,
   userLocation,
@@ -43,12 +55,20 @@ export const MapView: React.FC<MapViewProps> = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+
+  // Layer Refs untuk masing-masing dataset spasial
+  const adminBoundariesLayerRef = useRef<L.GeoJSON | null>(null);
   const geoJsonLayerRef = useRef<L.GeoJSON | null>(null);
+  const kesesuaianLayerRef = useRef<L.GeoJSON | null>(null);
+  const lbsLayerRef = useRef<L.GeoJSON | null>(null);
+  const sptLayerRef = useRef<L.GeoJSON | null>(null);
+
+  // Markers
   const surveyMarkersLayerRef = useRef<L.LayerGroup | null>(null);
   const userLocationLayerRef = useRef<L.LayerGroup | null>(null);
   const pickedMarkerLayerRef = useRef<L.LayerGroup | null>(null);
 
-  // Sync ref agar callback Leaflet selalu membaca state terkini (mencegah stale closure)
+  // Sync ref agar callback Leaflet membaca state terkini (mencegah stale closure)
   const isPickingManualLocationRef = useRef(isPickingManualLocation);
   isPickingManualLocationRef.current = isPickingManualLocation;
 
@@ -58,6 +78,73 @@ export const MapView: React.FC<MapViewProps> = ({
   const geoJsonDataRef = useRef(geoJsonData);
   geoJsonDataRef.current = geoJsonData;
 
+  const kesesuaianDataRef = useRef(kesesuaianData);
+  kesesuaianDataRef.current = kesesuaianData;
+
+  const sptDataRef = useRef(sptData);
+  sptDataRef.current = sptData;
+
+  const lbsDataRef = useRef(lbsData);
+  lbsDataRef.current = lbsData;
+
+  // Helper untuk cek status keaktifan layer
+  const isLayerActive = (id: string) => {
+    const l = layers.find((item) => item.id === id);
+    return l ? l.active : false;
+  };
+
+  // Helper untuk membangun PolygonFeatureInfo yang terintegrasi
+  const triggerPolygonSelect = (
+    lat: number,
+    lng: number,
+    source: 'rekomendasi_padi' | 'kesesuaian' | 'spt' | 'lbs',
+    primaryProps: any
+  ) => {
+    if (isPickingManualLocationRef.current || !onPolygonSelectRef.current) return;
+
+    // Deteksi kecamatan
+    const gData = geoJsonDataRef.current;
+    let kecName = primaryProps.KECAMATAN || '';
+    let kabName = primaryProps.KABKOT || 'Lampung Utara';
+    let provName = primaryProps.PROVINSI || 'Lampung';
+
+    if (!kecName && gData) {
+      const detected = findKecamatanByPoint(lat, lng, gData);
+      if (detected) {
+        kecName = detected.nama;
+        kabName = detected.kabupaten;
+        provName = detected.provinsi;
+      }
+    }
+
+    // Cek fitur beririsan dari layer aktif lain
+    let kProps = source === 'kesesuaian' ? primaryProps : null;
+    let sProps = source === 'spt' ? primaryProps : null;
+    let lProps = source === 'lbs' ? primaryProps : null;
+
+    if (!kProps && kesesuaianDataRef.current && isLayerActive('kesesuaian')) {
+      const f = findFeatureByPoint(lat, lng, kesesuaianDataRef.current);
+      if (f) kProps = f.properties;
+    }
+
+    if (!sProps && sptDataRef.current && isLayerActive('spt')) {
+      const f = findFeatureByPoint(lat, lng, sptDataRef.current);
+      if (f) sProps = f.properties;
+    }
+
+    onPolygonSelectRef.current({
+      kecamatan: kecName,
+      kabupaten: kabName,
+      provinsi: provName,
+      properties: primaryProps,
+      coordinates: [lat, lng],
+      layerSource: source,
+      kesesuaianProps: kProps,
+      sptProps: sProps,
+      lbsProps: lProps,
+    });
+  };
+
   // 1. Inisialisasi Peta Leaflet (Pusat Default: Kabupaten Lampung Utara)
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
@@ -66,19 +153,16 @@ export const MapView: React.FC<MapViewProps> = ({
     const map = L.map(mapContainerRef.current, {
       center: lampuraCenter,
       zoom: 10.5,
-      zoomControl: false, // Hilangkan default zoom top-right agar TIDAK tumpang tindih
+      zoomControl: false,
       attributionControl: false,
     });
 
-    // Posisikan Skala di kiri bawah
     L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
 
-    // Layer Groups
     surveyMarkersLayerRef.current = L.layerGroup().addTo(map);
     userLocationLayerRef.current = L.layerGroup().addTo(map);
     pickedMarkerLayerRef.current = L.layerGroup().addTo(map);
 
-    // Event Klik Kanvas Peta
     map.on('click', (e: L.LeafletMouseEvent) => {
       const lat = e.latlng.lat;
       const lng = e.latlng.lng;
@@ -90,26 +174,19 @@ export const MapView: React.FC<MapViewProps> = ({
         if (kec) {
           onKecamatanDetected(kec.nama);
 
-          // Munculkan pop-up detail jika berada di dalam poligon kecamatan
           if (!isPickingManualLocationRef.current && onPolygonSelectRef.current) {
             const feat = gData.features?.find(
               (f: any) => f.properties?.KECAMATAN?.toUpperCase() === kec.nama.toUpperCase()
             );
             if (feat) {
-              onPolygonSelectRef.current({
-                kecamatan: kec.nama,
-                kabupaten: feat.properties?.KABKOT || 'Lampung Utara',
-                provinsi: feat.properties?.PROVINSI || 'Lampung',
-                properties: feat.properties,
-                coordinates: [lat, lng],
-              });
+              triggerPolygonSelect(lat, lng, 'rekomendasi_padi', feat.properties);
             }
           }
         }
       }
     });
 
-    // Kontrol Visibilitas Label Berdasarkan Level Zoom (Mencegah Label Bertumpuk saat Zoom-Out)
+    // Kontrol Visibilitas Label Berdasarkan Level Zoom
     const updateZoomClass = () => {
       if (!mapContainerRef.current) return;
       const z = map.getZoom();
@@ -140,7 +217,6 @@ export const MapView: React.FC<MapViewProps> = ({
       if (userLocation) {
         mapInstanceRef.current.flyTo(userLocation, 15, { animate: true, duration: 1.2 });
       } else {
-        // Fallback: Kembali ke Lampung Utara
         mapInstanceRef.current.flyTo([-4.8500, 104.7500], 10.5, { animate: true, duration: 1.2 });
       }
     }
@@ -171,7 +247,39 @@ export const MapView: React.FC<MapViewProps> = ({
     tileLayerRef.current = newTileLayer;
   }, [activeBasemap]);
 
-  // 4. Render & Highlight Poligon Kecamatan (Tanpa Tooltip Kotak Hitam!)
+  // =========================================================================
+  // 4. LAYER OVERLAY 1: BATAS ADMINISTRASI KECAMATAN (HANYA OUTLINE, NO FILL)
+  // =========================================================================
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (adminBoundariesLayerRef.current) {
+      map.removeLayer(adminBoundariesLayerRef.current);
+      adminBoundariesLayerRef.current = null;
+    }
+
+    const isActive = isLayerActive('batas_desa');
+    if (!isActive || !adminBoundariesData) return;
+
+    const layer = L.geoJSON(adminBoundariesData, {
+      style: () => ({
+        fill: false, // TIDAK ADA FILL
+        fillOpacity: 0,
+        color: isDarkMode ? '#94a3b8' : '#334155',
+        weight: 1.8,
+        dashArray: '4, 4',
+        opacity: 0.85,
+        interactive: false, // Tidak mengganggu klik poligon tematik di bawahnya
+      }),
+    }).addTo(map);
+
+    adminBoundariesLayerRef.current = layer;
+  }, [adminBoundariesData, layers, isDarkMode]);
+
+  // =========================================================================
+  // 5. LAYER TEMATIK: PETA REKOMENDASI PEMUPUKAN PADI (KECAMATAN)
+  // =========================================================================
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !geoJsonData) return;
@@ -181,10 +289,8 @@ export const MapView: React.FC<MapViewProps> = ({
       geoJsonLayerRef.current = null;
     }
 
-    const inasoilagroLayerConfig = layers.find((l) => l.id === 'inasoilagro');
-    const isLayerActive = inasoilagroLayerConfig ? inasoilagroLayerConfig.active : true;
-
-    if (!isLayerActive) return;
+    const isActive = isLayerActive('inasoilagro');
+    if (!isActive) return;
 
     const layer = L.geoJSON(geoJsonData, {
       style: (feature) => {
@@ -192,7 +298,6 @@ export const MapView: React.FC<MapViewProps> = ({
         const isSelected = selectedKecamatan && kecName.toUpperCase() === selectedKecamatan.toUpperCase();
 
         if (isSelected) {
-          // HIGHLIGHT POLIGON TERPILIH: Garis Emas Terang + Fill Kontras Tinggi
           return {
             fillColor: '#facc15',
             fillOpacity: isDarkMode ? 0.45 : 0.4,
@@ -203,18 +308,12 @@ export const MapView: React.FC<MapViewProps> = ({
           };
         }
 
-        // Tampilan Normal Poligon Tematik
-        const pStatus = feature?.properties?.P_PADI;
-        let fillColor = '#10b981'; // Hijau
-        if (pStatus === 'Rendah') fillColor = '#f59e0b'; // Amber
-        else if (pStatus === 'Tinggi') fillColor = '#3b82f6'; // Biru
-
         return {
-          fillColor,
-          fillOpacity: isDarkMode ? 0.22 : 0.18,
+          fillColor: '#10b981',
+          fillOpacity: isDarkMode ? 0.16 : 0.12, // Transparan lembut agar satelit tetap terbaca
           color: isDarkMode ? '#34d399' : '#059669',
-          weight: 1.5,
-          opacity: 0.8,
+          weight: 1.2,
+          opacity: 0.7,
         };
       },
       onEachFeature: (feature, polyLayer) => {
@@ -222,33 +321,21 @@ export const MapView: React.FC<MapViewProps> = ({
         const kec = props.KECAMATAN || 'Kecamatan';
         const isSelected = selectedKecamatan && kec.toUpperCase() === selectedKecamatan.toUpperCase();
 
-        // Tampilkan label nama kecamatan di tengah poligon (Outdoor high-contrast)
         polyLayer.bindTooltip(kec, {
           permanent: true,
           direction: 'center',
           className: isSelected ? 'kecamatan-map-label active-label' : 'kecamatan-map-label',
         });
 
-        // Interaksi klik: highlight & pop-up informatif
         polyLayer.on('click', (e: L.LeafletMouseEvent) => {
           L.DomEvent.stopPropagation(e);
           const lat = e.latlng.lat;
           const lng = e.latlng.lng;
           
-          // Berikan koordinat ke handler dan pilih kecamatan
           onMapClickCoordinates([lat, lng]);
           onKecamatanDetected(kec);
 
-          // Munculkan pop-up detail poligon & rekomendasi jika bukan mode ambil manual
-          if (!isPickingManualLocationRef.current && onPolygonSelectRef.current) {
-            onPolygonSelectRef.current({
-              kecamatan: kec,
-              kabupaten: props.KABKOT || 'Lampung Utara',
-              provinsi: props.PROVINSI || 'Lampung',
-              properties: props,
-              coordinates: [lat, lng],
-            });
-          }
+          triggerPolygonSelect(lat, lng, 'rekomendasi_padi', props);
         });
       },
     }).addTo(map);
@@ -256,7 +343,149 @@ export const MapView: React.FC<MapViewProps> = ({
     geoJsonLayerRef.current = layer;
   }, [geoJsonData, layers, selectedKecamatan, isDarkMode]);
 
-  // 5. Render Marker Titik Lokasi Pengguna (GPS)
+  // =========================================================================
+  // 6. LAYER TEMATIK: PETA KESESUAIAN LAHAN PADI (BBSDLP)
+  // =========================================================================
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (kesesuaianLayerRef.current) {
+      map.removeLayer(kesesuaianLayerRef.current);
+      kesesuaianLayerRef.current = null;
+    }
+
+    const isActive = isLayerActive('kesesuaian');
+    if (!isActive || !kesesuaianData) return;
+
+    const layer = L.geoJSON(kesesuaianData, {
+      style: (feature) => {
+        const rawVal = feature?.properties?.[subTypeKesesuaian];
+        const kelas = rawVal ? rawVal.trim().split(' ')[0] : 'null';
+
+        let fillColor = '#94a3b8';
+        let fillOpacity = 0.55;
+
+        if (kelas === 'S1') fillColor = '#1a9850';
+        else if (kelas === 'S2') fillColor = '#a6d96a';
+        else if (kelas === 'S3') fillColor = '#fee08b';
+        else if (kelas === 'N') fillColor = '#d73027';
+        else {
+          fillOpacity = 0; // null tidak dinilai transparan
+        }
+
+        return {
+          fillColor,
+          fillOpacity,
+          color: fillOpacity === 0 ? 'transparent' : '#475569',
+          weight: 0.8,
+          opacity: 0.7,
+        };
+      },
+      onEachFeature: (feature, polyLayer) => {
+        const props = feature.properties || {};
+        polyLayer.on('click', (e: L.LeafletMouseEvent) => {
+          L.DomEvent.stopPropagation(e);
+          const lat = e.latlng.lat;
+          const lng = e.latlng.lng;
+          onMapClickCoordinates([lat, lng]);
+          triggerPolygonSelect(lat, lng, 'kesesuaian', props);
+        });
+      },
+    }).addTo(map);
+
+    kesesuaianLayerRef.current = layer;
+  }, [kesesuaianData, subTypeKesesuaian, layers, isDarkMode]);
+
+  // =========================================================================
+  // 7. LAYER OVERLAY 2: LAHAN BAKU SAWAH (LBS)
+  // =========================================================================
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (lbsLayerRef.current) {
+      map.removeLayer(lbsLayerRef.current);
+      lbsLayerRef.current = null;
+    }
+
+    const isActive = isLayerActive('lbs');
+    if (!isActive || !lbsData) return;
+
+    const layer = L.geoJSON(lbsData, {
+      style: (feature) => {
+        const jenis = feature?.properties?.Jenis_Lahan_Sawah;
+        const color = getLbsColor(jenis);
+
+        return {
+          fillColor: color,
+          fillOpacity: 0.65,
+          color: '#ffffff',
+          weight: 0.6,
+          opacity: 0.9,
+        };
+      },
+      onEachFeature: (feature, polyLayer) => {
+        const props = feature.properties || {};
+        polyLayer.on('click', (e: L.LeafletMouseEvent) => {
+          L.DomEvent.stopPropagation(e);
+          const lat = e.latlng.lat;
+          const lng = e.latlng.lng;
+          onMapClickCoordinates([lat, lng]);
+          triggerPolygonSelect(lat, lng, 'lbs', props);
+        });
+      },
+    }).addTo(map);
+
+    lbsLayerRef.current = layer;
+  }, [lbsData, layers, isDarkMode]);
+
+  // =========================================================================
+  // 8. LAYER TEMATIK: SATUAN PETA TANAH / JENIS TANAH (SPT)
+  // =========================================================================
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (sptLayerRef.current) {
+      map.removeLayer(sptLayerRef.current);
+      sptLayerRef.current = null;
+    }
+
+    const isActive = isLayerActive('spt');
+    if (!isActive || !sptData) return;
+
+    const layer = L.geoJSON(sptData, {
+      style: (feature) => {
+        const tanah = feature?.properties?.TANAH_1;
+        const group = getSoilGroupInfo(tanah);
+
+        return {
+          fillColor: group.color,
+          fillOpacity: 0.5,
+          color: '#334155',
+          weight: 1.2,
+          opacity: 0.8,
+        };
+      },
+      onEachFeature: (feature, polyLayer) => {
+        const props = feature.properties || {};
+        polyLayer.on('click', (e: L.LeafletMouseEvent) => {
+          L.DomEvent.stopPropagation(e);
+          const lat = e.latlng.lat;
+          const lng = e.latlng.lng;
+          onMapClickCoordinates([lat, lng]);
+          triggerPolygonSelect(lat, lng, 'spt', props);
+        });
+      },
+    }).addTo(map);
+
+    sptLayerRef.current = layer;
+  }, [sptData, layers, isDarkMode]);
+
+  // =========================================================================
+  // 9. MARKER GPS, PIN MANUAL, & TITIK SURVEI
+  // =========================================================================
   useEffect(() => {
     const userGroup = userLocationLayerRef.current;
     if (!userGroup) return;
@@ -292,7 +521,6 @@ export const MapView: React.FC<MapViewProps> = ({
     }
   }, [userLocation, gpsAccuracy, gpsActive]);
 
-  // 6. Render Pin Lokasi yang Sedang Dipilih Manual
   useEffect(() => {
     const pickedGroup = pickedMarkerLayerRef.current;
     if (!pickedGroup) return;
@@ -324,7 +552,6 @@ export const MapView: React.FC<MapViewProps> = ({
     }
   }, [pickedLocation]);
 
-  // 7. Render Marker Titik Rekomendasi Tersimpan
   useEffect(() => {
     const surveyGroup = surveyMarkersLayerRef.current;
     if (!surveyGroup) return;
@@ -359,7 +586,6 @@ export const MapView: React.FC<MapViewProps> = ({
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainerRef} className="w-full h-full z-0" />
-      {/* Banner Notifikasi saat Mode Pemilihan Titik Manual Aktif */}
       {isPickingManualLocation && (
         <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20 bg-amber-500 text-white px-4 py-2 rounded-full font-bold shadow-2xl border-2 border-white text-xs flex items-center gap-2 animate-bounce">
           <span>📍 Ketuk bidang sawah di peta untuk menetapkan koordinat</span>

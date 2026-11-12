@@ -26,6 +26,13 @@ export function App() {
 
   // Data Spasial & Peta State
   const [geoJsonData, setGeoJsonData] = useState<any>(null);
+  const [adminBoundariesData, setAdminBoundariesData] = useState<any>(null);
+  const [kesesuaianData, setKesesuaianData] = useState<any>(null);
+  const [lbsData, setLbsData] = useState<any>(null);
+  const [sptData, setSptData] = useState<any>(null);
+  const [subTypeKesesuaian, setSubTypeKesesuaian] = useState<'KSI' | 'KSH' | 'KPG'>('KSI');
+  const [loadingLayerId, setLoadingLayerId] = useState<string | null>(null);
+
   const [allKecamatanList, setAllKecamatanList] = useState<string[]>([]);
   const [detectedKecamatan, setDetectedKecamatan] = useState<string>('BUKIT KEMUNING');
   const [activeBasemap, setActiveBasemap] = useState<'osm' | 'satellite'>('osm');
@@ -61,8 +68,16 @@ export function App() {
     targetUrea?: number;
   }>({});
 
-  // Daftar Layer Spasial
+  // Daftar Layer Spasial & Simbologi
   const [layers, setLayers] = useState<LayerItem[]>([
+    {
+      id: 'batas_desa',
+      name: 'Batas Administrasi Kecamatan',
+      active: true,
+      available: true,
+      filename: 'batas-admin-kecamatan.geojson',
+      legend: [{ label: 'Garis Batas Wilayah (Tanpa Fill)', color: '#334155' }],
+    },
     {
       id: 'inasoilagro',
       name: 'Peta Rekomendasi Pemupukan Padi',
@@ -70,38 +85,49 @@ export function App() {
       available: true,
       filename: 'rekomendasi_pupuk_padi_lampura.geojson',
       legend: [
-        { label: 'P Rendah (Urea 250, SP36 100, KCl 50-100)', color: '#f59e0b' },
-        { label: 'P Sedang (Urea 250, SP36 75, KCl 50)', color: '#10b981' },
-        { label: 'P Tinggi (Urea 250, SP36 50, KCl 50)', color: '#3b82f6' },
+        { label: 'Status Makro: P Rendah, K Tinggi (Seragam 23 Kec.)', color: '#10b981' },
+        { label: 'Kecamatan Terpilih (Highlight)', color: '#facc15' },
+      ],
+    },
+    {
+      id: 'kesesuaian',
+      name: 'Peta Kesesuaian Lahan Padi (BBSDLP)',
+      active: false,
+      available: true,
+      filename: 'kesesuaian-lahan-lampura.geojson',
+      subType: 'KSI',
+      legend: [
+        { label: 'S1 (Sangat Sesuai)', color: '#1a9850' },
+        { label: 'S2 (Cukup Sesuai)', color: '#a6d96a' },
+        { label: 'S3 (Sesuai Marginal)', color: '#fee08b' },
+        { label: 'N (Tidak Sesuai)', color: '#d73027' },
       ],
     },
     {
       id: 'lbs',
       name: 'Peta Lahan Baku Sawah (LBS)',
       active: false,
-      available: false,
-      legend: [{ label: 'Sawah Irigasi Aktif', color: '#84cc16' }],
-    },
-    {
-      id: 'kesesuaian',
-      name: 'Peta Kesesuaian Lahan Padi',
-      active: false,
-      available: false,
-      legend: [{ label: 'S1 (Sangat Sesuai)', color: '#22c55e' }],
+      available: true,
+      filename: 'lahan-baku-sawah_lampura.geojson',
+      legend: [
+        { label: 'Irigasi', color: '#16a34a' },
+        { label: 'Tadah Hujan', color: '#84cc16' },
+        { label: 'Rawa / Lebak', color: '#06b6d4' },
+        { label: 'Non Irigasi', color: '#f59e0b' },
+      ],
     },
     {
       id: 'spt',
-      name: 'Peta Satuan Peta Tanah (SPT / Jenis Tanah)',
+      name: 'Peta Satuan Peta Tanah (Jenis Tanah / SPT)',
       active: false,
-      available: false,
-      legend: [{ label: 'Tanah Aluvial & Podsolik', color: '#a855f7' }],
-    },
-    {
-      id: 'batas_desa',
-      name: 'Batas Administrasi Desa & Kecamatan',
-      active: true,
       available: true,
-      legend: [{ label: 'Garis Batas Kecamatan', color: '#059669' }],
+      filename: 'spt-lampura.geojson',
+      legend: [
+        { label: 'Latosol (Umbrik, Kromik, Haplik, Oksik)', color: '#c2410c' },
+        { label: 'Kambisol (Gleik, Distrik, Kromik)', color: '#eab308' },
+        { label: 'Litosol (Berbatu Dangkal)', color: '#64748b' },
+        { label: 'Lahan Terbangun / Air', color: '#94a3b8' },
+      ],
     },
   ]);
 
@@ -116,6 +142,7 @@ export function App() {
 
   // 2. Muat Data GeoJSON dan Titik Survei Tersimpan Saat Startup
   useEffect(() => {
+    // Muat layer utama Rekomendasi Pemupukan Padi
     fetch('./base-data/rekomendasi_pupuk_padi_lampura.geojson')
       .then((res) => res.json())
       .then((data) => {
@@ -124,6 +151,14 @@ export function App() {
         setAllKecamatanList(kecs);
       })
       .catch((err) => console.error('Gagal memuat GeoJSON Lampung Utara:', err));
+
+    // Muat layer Batas Administrasi Kecamatan (Outline)
+    fetch('./base-data/batas-admin-kecamatan.geojson')
+      .then((res) => res.json())
+      .then((data) => {
+        setAdminBoundariesData(data);
+      })
+      .catch((err) => console.error('Gagal memuat Batas Administrasi:', err));
 
     getAllSurveyPoints().then((pts) => setSurveyPoints(pts));
     getLastSurveyorName().then((name) => setLastSurveyor(name));
@@ -186,11 +221,56 @@ export function App() {
     };
   }, [gpsActive, geoJsonData]);
 
-  // Handler Toggle Layer
+  // Handler Toggle Layer dengan Lazy Loading Dataset Spasial Berat
   const handleToggleLayer = (id: string) => {
+    const current = layers.find((l) => l.id === id);
+    if (!current) return;
+    const nextActive = !current.active;
+
     setLayers((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, active: !l.active } : l))
+      prev.map((l) => (l.id === id ? { ...l, active: nextActive } : l))
     );
+
+    // Muat data saat pertama kali diaktifkan jika belum ada di memori
+    if (nextActive) {
+      if (id === 'kesesuaian' && !kesesuaianData) {
+        setLoadingLayerId('kesesuaian');
+        fetch('./base-data/kesesuaian-lahan-lampura.geojson')
+          .then((r) => r.json())
+          .then((data) => {
+            setKesesuaianData(data);
+            setLoadingLayerId(null);
+          })
+          .catch((err) => {
+            console.error('Gagal memuat Kesesuaian Lahan:', err);
+            setLoadingLayerId(null);
+          });
+      } else if (id === 'lbs' && !lbsData) {
+        setLoadingLayerId('lbs');
+        fetch('./base-data/lahan-baku-sawah_lampura.geojson')
+          .then((r) => r.json())
+          .then((data) => {
+            setLbsData(data);
+            setLoadingLayerId(null);
+          })
+          .catch((err) => {
+            console.error('Gagal memuat Lahan Baku Sawah:', err);
+            setLoadingLayerId(null);
+          });
+      } else if (id === 'spt' && !sptData) {
+        setLoadingLayerId('spt');
+        fetch('./base-data/spt-lampura.geojson')
+          .then((r) => r.json())
+          .then((data) => {
+            setSptData(data);
+            setLoadingLayerId(null);
+          })
+          .catch((err) => {
+            console.error('Gagal memuat Satuan Peta Tanah:', err);
+            setLoadingLayerId(null);
+          });
+      }
+    }
   };
 
   // Handler Simpan Titik Rekomendasi
@@ -286,6 +366,11 @@ export function App() {
       {/* 1. Leaflet Interactive Map View */}
       <MapView
         geoJsonData={geoJsonData}
+        adminBoundariesData={adminBoundariesData}
+        kesesuaianData={kesesuaianData}
+        subTypeKesesuaian={subTypeKesesuaian}
+        lbsData={lbsData}
+        sptData={sptData}
         activeBasemap={activeBasemap}
         layers={layers}
         userLocation={userLocation}
@@ -350,6 +435,9 @@ export function App() {
         onToggleLayer={handleToggleLayer}
         activeBasemap={activeBasemap}
         onChangeBasemap={(bm) => setActiveBasemap(bm)}
+        subTypeKesesuaian={subTypeKesesuaian}
+        onChangeSubTypeKesesuaian={(sub) => setSubTypeKesesuaian(sub)}
+        loadingLayerId={loadingLayerId}
       />
 
       {/* 5. Calculator Bottom Sheet */}
