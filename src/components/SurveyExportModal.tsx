@@ -40,7 +40,7 @@ export const SurveyExportModal: React.FC<SurveyExportModalProps> = ({
   const [webhookUrl, setWebhookUrl] = useState<string>(() => {
     try {
       const saved = localStorage.getItem('pupuk_presisi_webhook_url');
-      if (saved && saved.trim()) return saved.trim();
+      if (saved && saved.trim() && !saved.includes('/macros/library/d/')) return saved.trim();
       return DEFAULT_WEBHOOK_URL;
     } catch {
       return DEFAULT_WEBHOOK_URL;
@@ -276,7 +276,7 @@ export const SurveyExportModal: React.FC<SurveyExportModalProps> = ({
                   ) : (
                     <>
                       <SendHorizontal className="w-4 h-4" />
-                      <span>KIRIM DATA KE GOOGLE SHEET SEKARANG</span>
+                      <span>KIRIM DATA SEKARANG</span>
                     </>
                   )}
                 </button>
