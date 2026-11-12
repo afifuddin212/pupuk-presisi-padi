@@ -57,11 +57,13 @@ Selain itu, aplikasi dilengkapi **Legenda Mengambang Dinamis (*Floating Mini-Leg
     *"Petani harus memberikan SP-36 Tambahan: [X] kg untuk menutup defisit fosfat tanah masam."*
 - **Kalkulasi Luas Petak Bebas (Hektar)**: Menghasilkan output kebutuhan riil petak petani ($\text{kg}$) dan dosis baku per hektar ($\text{kg/ha}$).
 
-### 4. Perekaman Titik Survei & Dual-Pipeline Pengiriman Data
+### 4. Perekaman Titik Survei & 2 Pilihan Pengiriman Data
 - **Penyimpanan Lokal Persisten (IndexedDB)**: Bekerja 100% offline di tengah pematang sawah tanpa sinyal seluler.
-- **KIRIM DATA SURVEI**:
-  - Berbagi instan via **WhatsApp & Android Native Share** (melampirkan CSV dan GeoJSON).
-  - Sinkronisasi instan via **Webhook Google Apps Script** langsung ke spreadsheet tim peneliti.
+- **2 Pilihan Pengelolaan & Ekspor Data Lapangan**:
+  1. **Pengiriman Data lewat WebHook Google Sheets**: Sinkronisasi instan satu ketukan langsung ke spreadsheet tim peneliti menggunakan Webhook Google Apps Script.
+  2. **Download Data secara Lokal (Manajemen Folder Otomatis)**: 
+     - Saat berbentuk aplikasi Android (`.apk`): Otomatis membuat folder `Dokumen/PupukPresisi/` di memori internal perangkat dan menyimpan berkas `CSV` & `GeoJSON` ke dalamnya.
+     - Saat di web browser: Otomatis mengunduh berkas `CSV` dan `GeoJSON` ke folder Download.
 
 ---
 

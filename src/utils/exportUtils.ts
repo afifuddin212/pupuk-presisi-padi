@@ -1,7 +1,9 @@
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { SurveyPoint } from '../types';
 
 /**
- * Mengonversi array SurveyPoint menjadi format CSV
+ * Mengonversi array SurveyPoint menjadi format teks CSV
  */
 export function convertPointsToCSV(points: SurveyPoint[]): string {
   const headers = [
@@ -16,10 +18,10 @@ export function convertPointsToCSV(points: SurveyPoint[]): string {
     'Jenis Padi',
     'Metode Rekomendasi',
     'Luas Petak (ha)',
-    'Status P (PUTS/PUTK)',
-    'Status K (PUTS/PUTK)',
-    'P2O5 Laboratorium (mg/100g)',
-    'K2O Laboratorium (mg/100g)',
+    'Status P',
+    'Status K',
+    'P2O5 Lab (mg/100g)',
+    'K2O Lab (mg/100g)',
     'Target Urea (kg/ha)',
     'Daur Ulang Jerami',
     'Dosis Tunggal Urea (kg/ha)',
@@ -28,7 +30,7 @@ export function convertPointsToCSV(points: SurveyPoint[]): string {
     'Dosis Majemuk NPK 15-10-12 (kg/ha)',
     'Dosis Majemuk Urea Tambahan (kg/ha)',
     'Dosis Majemuk SP-36 Tambahan (kg/ha)',
-    'Catatan Khusus',
+    'Catatan Lapangan',
   ];
 
   const rows = points.map((p) => [
@@ -40,7 +42,7 @@ export function convertPointsToCSV(points: SurveyPoint[]): string {
     p.accuracy ?? '',
     p.source,
     `"${p.kecamatan}"`,
-    p.jenisPadi === 'gogo' ? 'Padi Gogo/Kering' : 'Padi Sawah',
+    p.jenisPadi === 'gogo' ? 'Padi Gogo' : 'Padi Sawah',
     p.metodeRekomendasi ? p.metodeRekomendasi.toUpperCase() : 'PUTS',
     p.luasPetak ?? 1,
     p.pStatus,
@@ -48,7 +50,7 @@ export function convertPointsToCSV(points: SurveyPoint[]): string {
     p.p2o5Kuantitatif ?? '',
     p.k2oKuantitatif ?? '',
     p.targetUrea,
-    p.hasStrawRecycled ? 'Ya (>=5 ton)' : 'Tidak',
+    p.hasStrawRecycled ? 'Ya' : 'Tidak',
     p.tunggal.urea,
     p.tunggal.sp36,
     p.tunggal.kcl,
@@ -67,7 +69,7 @@ export function convertPointsToCSV(points: SurveyPoint[]): string {
 export function convertPointsToGeoJSON(points: SurveyPoint[]): string {
   const geojson = {
     type: 'FeatureCollection',
-    name: 'Survei_Rekomendasi_Pupuk_Presisi',
+    name: 'Survei_Rekomendasi_Pupuk_Presisi_Lampura',
     features: points.map((p) => ({
       type: 'Feature',
       properties: {
@@ -120,71 +122,154 @@ export function triggerFileDownload(content: string, filename: string, mimeType:
 }
 
 /**
- * Mengirim data survei terpadu via Web Share API / WhatsApp / Download
+ * PILIHAN 1: Mengirim seluruh data titik survei ke Webhook Google Sheets
  */
-export async function shareAllSurveyData(
+export async function sendSurveyDataToWebhook(
   points: SurveyPoint[],
-  webhookUrl?: string
+  webhookUrl: string
 ): Promise<{ success: boolean; message: string }> {
   if (points.length === 0) {
     return { success: false, message: 'Belum ada data titik survei yang tersimpan.' };
   }
 
+  const cleanUrl = webhookUrl.trim();
+  if (!cleanUrl) {
+    return { success: false, message: 'URL Webhook Google Sheets belum diisi.' };
+  }
+
+  if (!navigator.onLine) {
+    return {
+      success: false,
+      message: 'Perangkat sedang offline. Pastikan koneksi internet aktif untuk mengirim ke WebHook.',
+    };
+  }
+
+  const payload = {
+    app: 'Rekomendasi Pemupukan Presisi Padi',
+    sentAt: new Date().toISOString(),
+    totalPoints: points.length,
+    points: points.map((p) => ({
+      id: p.id,
+      timestamp: p.timestamp,
+      surveyor: p.surveyorName,
+      latitude: p.latitude,
+      longitude: p.longitude,
+      accuracy: p.accuracy,
+      source: p.source,
+      kecamatan: p.kecamatan,
+      jenisPadi: p.jenisPadi === 'gogo' ? 'Padi Gogo' : 'Padi Sawah',
+      metode: p.metodeRekomendasi ? p.metodeRekomendasi.toUpperCase() : 'PUTS',
+      luasPetakHa: p.luasPetak ?? 1,
+      pStatus: p.pStatus,
+      kStatus: p.kStatus,
+      p2o5Lab: p.p2o5Kuantitatif,
+      k2oLab: p.k2oKuantitatif,
+      targetUrea: p.targetUrea,
+      hasStrawRecycled: p.hasStrawRecycled,
+      ureaTunggal: p.tunggal.urea,
+      sp36Tunggal: p.tunggal.sp36,
+      kclTunggal: p.tunggal.kcl,
+      npkMajemuk: p.majemuk.npk,
+      ureaTambahan: p.majemuk.ureaTambahan,
+      sp36Tambahan: p.majemuk.sp36Tambahan ?? 0,
+      notes: p.notes,
+    })),
+  };
+
+  try {
+    // Mode no-cors digunakan untuk kompatibilitas redirect 302 Google Apps Script Web App
+    await fetch(cleanUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8',
+      },
+      body: JSON.stringify(payload),
+      mode: 'no-cors',
+    });
+
+    return {
+      success: true,
+      message: `Berhasil mengirim ${points.length} titik survei ke WebHook Google Sheets. Periksa spreadsheet tim peneliti Anda.`,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: `Gagal mengirim ke WebHook: ${err?.message || 'Periksa kembali URL Webhook Anda.'}`,
+    };
+  }
+}
+
+/**
+ * PILIHAN 2: Download data secara lokal.
+ * Saat berbentuk aplikasi native (Capacitor Android):
+ * - Otomatis membuat folder 'PupukPresisi' di dalam Documents/
+ * - Menyimpan berkas CSV & GeoJSON langsung ke dalam folder tersebut.
+ * Saat di Web Browser:
+ * - Mengunduh otomatis kedua berkas CSV & GeoJSON ke folder Download pengguna.
+ */
+export async function downloadSurveyDataLocally(
+  points: SurveyPoint[]
+): Promise<{ success: boolean; message: string; folderName?: string }> {
+  if (points.length === 0) {
+    return { success: false, message: 'Belum ada data titik survei yang tersimpan.' };
+  }
+
   const dateStr = new Date().toISOString().slice(0, 10);
+  const csvFileName = `Survei_Pupuk_Presisi_${dateStr}.csv`;
+  const geojsonFileName = `Survei_Pupuk_Presisi_${dateStr}.geojson`;
   const csvContent = convertPointsToCSV(points);
   const geojsonContent = convertPointsToGeoJSON(points);
 
-  // 1. Jika ada webhook Google Sheets, kirim payload JSON
-  let webhookStatus = '';
-  if (webhookUrl && navigator.onLine) {
+  // 1. Jika berjalan sebagai Native App (Capacitor Android Container)
+  if (Capacitor.isNativePlatform()) {
     try {
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: geojsonContent,
-        mode: 'no-cors', // Untuk Google Apps Script webhook
-      });
-      webhookStatus = ' & berhasil dikirim ke Google Sheets Peneliti';
-    } catch (e) {
-      console.warn('Gagal menembak webhook Google Sheets:', e);
-    }
-  }
+      const folderName = 'PupukPresisi';
 
-  // 2. Coba Web Share API (didukung mobile browser & Android WebView)
-  if (navigator.share && navigator.canShare) {
-    try {
-      const csvFile = new File([csvContent], `Survei_Pupuk_Presisi_${dateStr}.csv`, {
-        type: 'text/csv',
-      });
-      const geojsonFile = new File([geojsonContent], `Survei_Pupuk_Presisi_${dateStr}.geojson`, {
-        type: 'application/geo+json',
-      });
-
-      if (navigator.canShare({ files: [csvFile, geojsonFile] })) {
-        await navigator.share({
-          title: 'Data Survei Pupuk Presisi Padi Lampung Utara',
-          text: `Rekap ${points.length} titik survei pemupukan presisi padi (Permentan 13/2022).`,
-          files: [csvFile, geojsonFile],
+      // Otomatis buat folder 'PupukPresisi' di direktori Documents jika belum ada
+      try {
+        await Filesystem.mkdir({
+          path: folderName,
+          directory: Directory.Documents,
+          recursive: true,
         });
-        return { success: true, message: `Berhasil dibagikan melalui Android Native Share${webhookStatus}.` };
+      } catch (err) {
+        // Folder mungkin sudah ada, lanjutkan penulisan file
       }
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        console.warn('Web Share API error, fallback to direct download:', err);
-      } else {
-        return { success: true, message: 'Berbagi data dibatalkan oleh pengguna.' };
-      }
+
+      // Tulis berkas CSV ke dalam folder Dokumen/PupukPresisi/
+      await Filesystem.writeFile({
+        path: `${folderName}/${csvFileName}`,
+        data: csvContent,
+        directory: Directory.Documents,
+        encoding: Encoding.UTF8,
+      });
+
+      // Tulis berkas GeoJSON ke dalam folder Dokumen/PupukPresisi/
+      await Filesystem.writeFile({
+        path: `${folderName}/${geojsonFileName}`,
+        data: geojsonContent,
+        directory: Directory.Documents,
+        encoding: Encoding.UTF8,
+      });
+
+      return {
+        success: true,
+        message: `Berkas CSV & GeoJSON berhasil disimpan otomatis ke folder: Dokumen/PupukPresisi/ pada memori internal perangkat Anda.`,
+        folderName: 'Documents/PupukPresisi',
+      };
+    } catch (e: any) {
+      console.warn('Gagal menulis ke Filesystem Capacitor, fallback ke browser download:', e);
     }
   }
 
-  // 3. Fallback: Download file CSV & GeoJSON langsung
-  triggerFileDownload(csvContent, `Survei_Pupuk_Presisi_${dateStr}.csv`, 'text/csv');
+  // 2. Jika berjalan di Web Browser: Download kedua file secara lokal
+  triggerFileDownload(csvContent, csvFileName, 'text/csv');
   setTimeout(() => {
-    triggerFileDownload(geojsonContent, `Survei_Pupuk_Presisi_${dateStr}.geojson`, 'application/geo+json');
+    triggerFileDownload(geojsonContent, geojsonFileName, 'application/geo+json');
   }, 400);
 
   return {
     success: true,
-    message: `Berkas CSV & GeoJSON berhasil diunduh ke perangkat Anda${webhookStatus}.`,
+    message: `Berkas CSV (${csvFileName}) & GeoJSON (${geojsonFileName}) berhasil diunduh ke folder Download lokal perangkat Anda.`,
   };
 }
