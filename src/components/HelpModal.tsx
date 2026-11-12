@@ -147,7 +147,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     Pilih Jenis Tanaman &amp; Metode Rekomendasi
                   </h5>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    • <strong>Padi Sawah</strong>: Anda dapat memilih metode <em>PUTS (Uji Sawah)</em> atau <em>Permentan 13/2022 (Baku Kecamatan)</em>.<br />
+                    • <strong>Padi Sawah</strong>: Anda dapat memilih metode <em>Permentan 13/2022</em> (algoritma presisi status hara P &amp; K) atau <em>PUTS (Uji Sawah)</em>.<br />
                     • <strong>Padi Gogo</strong>: Menggunakan metode <em>PUTK (Perangkat Uji Tanah Kering / BRMP)</em> yang khusus disesuaikan untuk tanah kering masam.
                   </p>
                 </div>

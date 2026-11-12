@@ -161,6 +161,10 @@ export function getRekomendasiBakuKecamatanPermentan(kecamatan: string): Rekomen
 
 /**
  * Menghitung dosis pupuk terpadu sesuai parameter input pengguna.
+ * Padi Sawah (Metode 'permentan' maupun 'puts'):
+ * Menggunakan algoritma presisi terpadu berdasarkan kombinasi status hara P & K (kualitatif/kuantitatif),
+ * target produktivitas urea dasar, dan faktor daur ulang jerami sesuai dokumen:
+ * rekomendasi_pemupukan_presisi_padi_terpadu.md (Bukan ketetapan statis baku kecamatan).
  */
 export function hitungRekomendasiPupuk(
   pStatus: HaraStatus,
@@ -175,9 +179,12 @@ export function hitungRekomendasiPupuk(
     return hitungRekomendasiPadiGogoPUTK(pStatus, kStatus);
   }
 
+  // Padi Sawah (Metode 'permentan' maupun 'puts'):
+  // Menggunakan algoritma matriks terpadu Permentan 13/2022 & PUTS
+  const res = hitungRekomendasiPadiSawahPUTS(pStatus, kStatus, targetUrea, hasStrawRecycled);
+  res.metode = metode;
   if (metode === 'permentan') {
-    return getRekomendasiBakuKecamatanPermentan(kecamatan);
+    res.catatanKhusus = `Rekomendasi presisi Padi Sawah berbasis algoritma Permentan 13/2022 (Status P: ${pStatus}, K: ${kStatus}, Target Urea: ${targetUrea} kg/ha).`;
   }
-
-  return hitungRekomendasiPadiSawahPUTS(pStatus, kStatus, targetUrea, hasStrawRecycled);
+  return res;
 }

@@ -429,18 +429,6 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
               <div className="grid grid-cols-2 p-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 gap-1">
                 <button
                   type="button"
-                  onClick={() => setMetode('puts')}
-                  className={`py-2 px-2 rounded-lg font-bold text-xs transition flex flex-col items-center justify-center text-center ${
-                    metode === 'puts'
-                      ? 'bg-emerald-700 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <span>PUTS (Uji Sawah)</span>
-                  <span className="text-[9.5px] opacity-85 font-normal">Sesuai Status Hara P &amp; K</span>
-                </button>
-                <button
-                  type="button"
                   onClick={() => setMetode('permentan')}
                   className={`py-2 px-2 rounded-lg font-bold text-xs transition flex flex-col items-center justify-center text-center ${
                     metode === 'permentan'
@@ -449,7 +437,19 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                   }`}
                 >
                   <span>Permentan 13/2022</span>
-                  <span className="text-[9.5px] opacity-85 font-normal">Ketetapan Baku Kecamatan</span>
+                  <span className="text-[9.5px] opacity-85 font-normal">Algoritma Status Hara P &amp; K</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMetode('puts')}
+                  className={`py-2 px-2 rounded-lg font-bold text-xs transition flex flex-col items-center justify-center text-center ${
+                    metode === 'puts'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <span>PUTS (Uji Sawah)</span>
+                  <span className="text-[9.5px] opacity-85 font-normal">Bagan Warna Uji Sawah</span>
                 </button>
               </div>
             ) : (
@@ -468,44 +468,43 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
           </div>
 
           {/* ======================================================== */}
-          {/* 4. INPUT HARA TANAH (JIKA METODE PUTS ATAU PUTK) */}
+          {/* 4. INPUT HARA TANAH (STATUS P & K KUALITATIF / KUANTITATIF) */}
           {/* ======================================================== */}
-          {metode !== 'permentan' && (
-            <div className="space-y-3">
-              {/* Toggle Kualitatif vs Kuantitatif */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
-                  Cara Penentuan Status Hara Tanah:
-                </label>
-                <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setMode('kualitatif')}
-                    className={`py-2 px-2 rounded-xl font-bold text-xs transition flex flex-col items-center justify-center ${
-                      mode === 'kualitatif'
-                        ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
-                        : 'text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    <span>Metode Kualitatif</span>
-                    <span className="text-[9.5px] font-semibold opacity-85">
-                      ({jenisPadi === 'sawah' ? 'PUTS' : 'PUTK'} Bagan Warna)
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode('kuantitatif')}
-                    className={`py-2 px-2 rounded-xl font-bold text-xs transition flex flex-col items-center justify-center ${
-                      mode === 'kuantitatif'
-                        ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
-                        : 'text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    <span>Metode Kuantitatif</span>
-                    <span className="text-[9.5px] font-semibold opacity-85">(Laboratorium mg/100g)</span>
-                  </button>
-                </div>
+          <div className="space-y-3">
+            {/* Toggle Kualitatif vs Kuantitatif */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
+                Cara Penentuan Status Hara Tanah:
+              </label>
+              <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => setMode('kualitatif')}
+                  className={`py-2 px-2 rounded-xl font-bold text-xs transition flex flex-col items-center justify-center ${
+                    mode === 'kualitatif'
+                      ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <span>Metode Kualitatif</span>
+                  <span className="text-[9.5px] font-semibold opacity-85">
+                    ({jenisPadi === 'sawah' ? (metode === 'permentan' ? 'Bagan Warna / Permentan' : 'PUTS') : 'PUTK'} Bagan Warna)
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('kuantitatif')}
+                  className={`py-2 px-2 rounded-xl font-bold text-xs transition flex flex-col items-center justify-center ${
+                    mode === 'kuantitatif'
+                      ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <span>Metode Kuantitatif</span>
+                  <span className="text-[9.5px] font-semibold opacity-85">(Laboratorium mg/100g)</span>
+                </button>
               </div>
+            </div>
 
               {mode === 'kualitatif' ? (
                 <div className="space-y-3">
@@ -606,7 +605,6 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                 </div>
               )}
             </div>
-          )}
 
           {/* ======================================================== */}
           {/* 5. INPUT LUAS PETAK SAWAH PETANI (HEKTAR) */}
@@ -658,9 +656,9 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
           </div>
 
           {/* ======================================================== */}
-          {/* 6. TARGET HASIL UREA & FAKTOR JERAMI (KHUSUS PADI SAWAH METODE PUTS) */}
+          {/* 6. TARGET HASIL UREA & FAKTOR JERAMI (KHUSUS PADI SAWAH) */}
           {/* ======================================================== */}
-          {jenisPadi === 'sawah' && metode === 'puts' && (
+          {jenisPadi === 'sawah' && (
             <div className="space-y-3">
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
@@ -818,7 +816,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <span className="font-bold">CATATAN PENTING: </span>
-              <span>Rekomendasi di atas mengacu pada {metode === 'permentan' ? 'Baku Tabel Lampiran A Permentan 13/2022' : jenisPadi === 'gogo' ? 'Panduan Terpadu PUTK / BRMP Padi Gogo' : 'Matriks Terpadu PUTS & Permentan 13/2022'}. Konsultasikan selalu dengan penyuluh (PPL) setempat.</span>
+              <span>Rekomendasi di atas mengacu pada {metode === 'permentan' ? 'Algoritma Pemupukan Permentan 13/2022' : jenisPadi === 'gogo' ? 'Panduan Terpadu PUTK / BRMP Padi Gogo' : 'Matriks Terpadu PUTS & Permentan 13/2022'}. Konsultasikan selalu dengan penyuluh (PPL) setempat.</span>
             </div>
           </div>
         </div>

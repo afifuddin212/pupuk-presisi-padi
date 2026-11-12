@@ -135,3 +135,4 @@ export const FloatingMiniLegend: React.FC<FloatingMiniLegendProps> = ({
     </div>
   );
 };
+
