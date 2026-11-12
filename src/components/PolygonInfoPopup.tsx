@@ -5,8 +5,6 @@ import {
   Calculator, 
   Layers, 
   AlertTriangle, 
-  ChevronDown, 
-  ChevronUp, 
   Wheat,
   Table,
   CheckCircle2,
@@ -39,7 +37,6 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabRekomendasi>('inasoilagro');
   const [showComparisonTable, setShowComparisonTable] = useState<boolean>(false);
-  const [showOtherCrops, setShowOtherCrops] = useState<boolean>(false);
 
   if (!info) return null;
 
@@ -145,7 +142,6 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
   };
 
   const isRekomendasiLayerActive = isLayerActive('inasoilagro');
-  const activeVectorLayers = activeLayers.filter((l) => l.active);
 
   const handleOpenCalculator = () => {
     let jenisPadi: JenisPadi = 'sawah';
@@ -165,7 +161,6 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
       metode = 'puts';
       targetUrea = 250;
     } else {
-      // inasoilagro default ke puts dengan status hara inasoilagro
       jenisPadi = 'sawah';
       metode = 'puts';
       targetUrea = 250;
@@ -201,9 +196,6 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                     Informasi Wilayah Terpilih
-                  </span>
-                  <span className="text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.2 rounded-md">
-                    Permentan 13/2022
                   </span>
                 </div>
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">
@@ -446,31 +438,6 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
                   </p>
                 </div>
               )}
-
-              {/* Data Acuan Komoditas Lain (Jagung & Kedelai) */}
-              {(props.UREA_T_JG || props.UREA_T_KDL) && (
-                <div className="pt-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setShowOtherCrops(!showOtherCrops)}
-                    className="w-full flex items-center justify-between text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 hover:underline pt-1"
-                  >
-                    <span>Data Acuan Komoditas Lain (Jagung &amp; Kedelai)</span>
-                    {showOtherCrops ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
-
-                  {showOtherCrops && (
-                    <div className="mt-2 p-2.5 bg-white/90 dark:bg-slate-900/90 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-[11px]">
-                      <div>
-                        <strong>Jagung</strong>: Urea {props.UREA_T_JG || '50'} kg, SP-36 {props.SP_36_JG || '50'} kg, KCl {props.KCl_JG || '75'} kg (P: {props.P_JG}, K: {props.K_JG}).
-                      </div>
-                      <div>
-                        <strong>Kedelai</strong>: Urea {props.UREA_T_KDL || '350'} kg, SP-36 {props.SP_36_KDL || '100'} kg, KCl {props.KCl_KDL || '75'} kg (P: {props.P_KDL}, K: {props.K_KDL}).
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           ) : (
             <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-700 text-center space-y-1">
@@ -540,22 +507,24 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons: Tab InaSoilAgro hanya memiliki tombol Tutup, tab lainnya memiliki tombol Hitung dengan Luas Petak */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-2.5">
           <button
             onClick={onClose}
-            className="w-1/3 py-3 px-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl hover:bg-slate-200 text-xs transition"
+            className={`${activeTab === 'inasoilagro' ? 'w-full' : 'w-1/3'} py-3 px-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl hover:bg-slate-200 text-xs transition`}
           >
             Tutup
           </button>
 
-          <button
-            onClick={handleOpenCalculator}
-            className="flex-1 py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold rounded-2xl shadow-xl transition flex items-center justify-center gap-2 text-xs border border-amber-300"
-          >
-            <Calculator className="w-4 h-4 text-white" />
-            <span>Hitung dengan Luas Petak ({activeTab.toUpperCase()})</span>
-          </button>
+          {activeTab !== 'inasoilagro' && (
+            <button
+              onClick={handleOpenCalculator}
+              className="flex-1 py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold rounded-2xl shadow-xl transition flex items-center justify-center gap-2 text-xs border border-amber-300"
+            >
+              <Calculator className="w-4 h-4 text-white" />
+              <span>Hitung dengan Luas Petak ({activeTab === 'permentan' ? 'PERMENTAN' : activeTab.toUpperCase()})</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

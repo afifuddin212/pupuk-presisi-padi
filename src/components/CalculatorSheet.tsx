@@ -17,6 +17,7 @@ import {
 import { HaraStatus, SurveyPoint, JenisPadi, MetodeRekomendasi } from '../types';
 import { hitungRekomendasiPupuk } from '../utils/fertilizerCalculator';
 import { convertP2O5ToStatus, convertK2OToStatus } from '../utils/putsConverter';
+import { findKecamatanByPoint } from '../utils/spatialUtils';
 
 interface CalculatorSheetProps {
   isOpen: boolean;
@@ -24,6 +25,9 @@ interface CalculatorSheetProps {
   detectedKecamatan: string;
   allKecamatanList: string[];
   currentCoordinates: [number, number] | null;
+  userLocation?: [number, number] | null;
+  pickedLocation?: [number, number] | null;
+  geoJsonData?: any;
   gpsAccuracy?: number;
   lastSurveyor: string;
   initialJenisPadi?: JenisPadi;
@@ -43,6 +47,9 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
   detectedKecamatan,
   allKecamatanList,
   currentCoordinates,
+  userLocation,
+  pickedLocation,
+  geoJsonData,
   gpsAccuracy,
   lastSurveyor,
   initialJenisPadi,
@@ -55,6 +62,13 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
   onRequestManualPick,
   isPickingManualLocation,
 }) => {
+  // Perekaman Titik Survei State (Paling Atas)
+  const [surveyorName, setSurveyorName] = useState<string>(lastSurveyor || '');
+  const [useCurrentGps, setUseCurrentGps] = useState<boolean>(true);
+  const [selectedKecamatan, setSelectedKecamatan] = useState<string>(detectedKecamatan || 'BUKIT KEMUNING');
+  const [isAutoDetected, setIsAutoDetected] = useState<boolean>(true);
+  const [notes, setNotes] = useState<string>('');
+
   // Jenis Padi (Sawah vs Gogo) & Metode
   const [jenisPadi, setJenisPadi] = useState<JenisPadi>(initialJenisPadi || 'sawah');
   const [metode, setMetode] = useState<MetodeRekomendasi>(initialMetode || 'puts');
@@ -76,12 +90,6 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
 
   // Koreksi Jerami (Hanya Sawah)
   const [hasStrawRecycled, setHasStrawRecycled] = useState<boolean>(false);
-  
-  // Kecamatan & Surveyor Info
-  const [selectedKecamatan, setSelectedKecamatan] = useState<string>(detectedKecamatan || 'BUKIT KEMUNING');
-  const [surveyorName, setSurveyorName] = useState<string>(lastSurveyor || '');
-  const [useCurrentGps, setUseCurrentGps] = useState<boolean>(true);
-  const [notes, setNotes] = useState<string>('');
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
 
   // Update initial props jika berubah
@@ -93,19 +101,34 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
     if (initialTargetUrea) setTargetUrea(initialTargetUrea);
   }, [initialJenisPadi, initialMetode, initialPStatus, initialKStatus, initialTargetUrea]);
 
-  // Update selectedKecamatan jika terdeteksi baru
-  useEffect(() => {
-    if (detectedKecamatan) {
-      setSelectedKecamatan(detectedKecamatan);
-    }
-  }, [detectedKecamatan]);
-
   // Update lastSurveyor jika ada
   useEffect(() => {
     if (lastSurveyor && !surveyorName) {
       setSurveyorName(lastSurveyor);
     }
   }, [lastSurveyor]);
+
+  // SINKRONISASI OTOMATIS KECAMATAN:
+  // Berdasarkan lokasi GPS pengguna atau titik peta yang diketuk
+  useEffect(() => {
+    const activeCoords = useCurrentGps 
+      ? (userLocation || currentCoordinates) 
+      : (pickedLocation || currentCoordinates);
+
+    if (activeCoords && geoJsonData) {
+      const kec = findKecamatanByPoint(activeCoords[0], activeCoords[1], geoJsonData);
+      if (kec) {
+        setSelectedKecamatan(kec.nama);
+        setIsAutoDetected(true);
+        return;
+      }
+    }
+
+    if (detectedKecamatan) {
+      setSelectedKecamatan(detectedKecamatan);
+      setIsAutoDetected(true);
+    }
+  }, [useCurrentGps, userLocation, pickedLocation, currentCoordinates, geoJsonData, detectedKecamatan, isOpen]);
 
   // Sinkronisasi jenis padi dan metode yang valid
   const handleSelectJenisPadi = (val: JenisPadi) => {
@@ -154,15 +177,19 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
 
   if (!isOpen) return null;
 
+  const activeCoords = useCurrentGps 
+    ? (userLocation || currentCoordinates) 
+    : (pickedLocation || currentCoordinates);
+
   const handleSave = () => {
-    const lat = currentCoordinates ? currentCoordinates[0] : -4.8500;
-    const lng = currentCoordinates ? currentCoordinates[1] : 104.7500;
+    const lat = activeCoords ? activeCoords[0] : -4.8500;
+    const lng = activeCoords ? activeCoords[1] : 104.7500;
 
     onSavePoint({
       surveyorName: surveyorName.trim() || 'Petani / Penyuluh',
       latitude: lat,
       longitude: lng,
-      accuracy: gpsAccuracy,
+      accuracy: useCurrentGps ? gpsAccuracy : undefined,
       source: useCurrentGps ? 'gps' : 'manual',
       kecamatan: selectedKecamatan,
       jenisPadi,
@@ -229,11 +256,137 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
         {/* Form Body Scrollable */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-700 dark:text-slate-300 custom-scrollbar">
           
-          {/* 1. PILIHAN JENIS TANAMAN / SAWAH (Sawah vs Gogo) */}
+          {/* ======================================================== */}
+          {/* 1. KOTAK PEREKAMAN DATA TITIK SURVEI & LOKASI LAHAN (PALING ATAS) */}
+          {/* ======================================================== */}
+          <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between">
+              <h5 className="font-extrabold text-slate-900 dark:text-white text-xs flex items-center gap-1.5 uppercase tracking-wide">
+                <User className="w-4 h-4 text-emerald-600" />
+                <span>Perekaman Data Titik Survei &amp; Wilayah</span>
+              </h5>
+              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full">
+                Wajib Diisi
+              </span>
+            </div>
+
+            {/* Nama Pencatat */}
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                Nama Pencatat / Surveyor / Petani:
+              </label>
+              <input
+                type="text"
+                placeholder="Nama Anda atau Petani / PPL"
+                value={surveyorName}
+                onChange={(e) => setSurveyorName(e.target.value)}
+                className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium text-xs focus:ring-2 focus:ring-emerald-500 shadow-xs"
+              />
+            </div>
+
+            {/* Pilihan Titik Lokasi */}
+            <div className="space-y-1.5 pt-0.5">
+              <div className="flex items-center justify-between text-xs">
+                <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
+                  <input
+                    type="radio"
+                    name="locChoice"
+                    checked={useCurrentGps}
+                    onChange={() => setUseCurrentGps(true)}
+                    className="text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span>Gunakan Posisi GPS Sekarang</span>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseCurrentGps(false);
+                    onRequestManualPick();
+                  }}
+                  className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition flex items-center gap-1 ${
+                    !useCurrentGps
+                      ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                      : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>{isPickingManualLocation ? 'Sedang Tap Peta...' : 'Pilih Titik di Peta'}</span>
+                </button>
+              </div>
+
+              <div className="text-[10px] text-slate-600 dark:text-slate-300 font-mono bg-white/80 dark:bg-slate-900/70 p-2 rounded-xl border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between">
+                <span>
+                  Koordinat:{' '}
+                  {activeCoords
+                    ? `${activeCoords[0].toFixed(5)}, ${activeCoords[1].toFixed(5)}`
+                    : 'Menunggu koordinat GPS / ketukan peta...'}
+                </span>
+                {useCurrentGps && gpsAccuracy && (
+                  <span className="text-[9.5px] text-emerald-600 dark:text-emerald-400 font-bold">
+                    ±{gpsAccuracy.toFixed(1)}m
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* KECAMATAN DI LAMPUNG UTARA (Otomatis Terisi Sesuai GPS / Titik Peta) */}
+            <div className="pt-1">
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Kecamatan di Lampung Utara:</span>
+                </label>
+                {isAutoDetected && (
+                  <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <span>Terisi Otomatis ({useCurrentGps ? 'GPS' : 'Peta'})</span>
+                  </span>
+                )}
+              </div>
+
+              <select
+                value={selectedKecamatan}
+                onChange={(e) => {
+                  setSelectedKecamatan(e.target.value);
+                  setIsAutoDetected(false);
+                }}
+                className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-emerald-500 text-xs shadow-xs"
+              >
+                {allKecamatanList.length > 0 ? (
+                  allKecamatanList.map((kec) => (
+                    <option key={kec} value={kec}>
+                      Kecamatan {kec}
+                    </option>
+                  ))
+                ) : (
+                  <option value="BUKIT KEMUNING">Kecamatan BUKIT KEMUNING</option>
+                )}
+              </select>
+            </div>
+
+            {/* Catatan Lapangan (Opsional) */}
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                Catatan Kondisi Lahan (Opsional):
+              </label>
+              <input
+                type="text"
+                placeholder="Contoh: Varietas Inpari 32, fase vegetatif awal..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 shadow-xs"
+              />
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* 2. PILIHAN JENIS TANAMAN / SAWAH (Sawah vs Gogo) */}
+          {/* ======================================================== */}
           <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 space-y-2">
             <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase flex items-center gap-1.5">
               <Wheat className="w-3.5 h-3.5 text-emerald-600" />
-              <span>1. Jenis Tanaman / Lahan:</span>
+              <span>2. Jenis Tanaman / Lahan:</span>
             </label>
             <div className="grid grid-cols-2 p-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 gap-1">
               <button
@@ -263,11 +416,13 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
             </div>
           </div>
 
-          {/* 2. PILIHAN METODE REKOMENDASI PEMUPUKAN */}
+          {/* ======================================================== */}
+          {/* 3. PILIHAN METODE REKOMENDASI PEMUPUKAN */}
+          {/* ======================================================== */}
           <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 space-y-2">
             <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-blue-600" />
-              <span>2. Metode Rekomendasi Pemupukan:</span>
+              <span>3. Metode Rekomendasi Pemupukan:</span>
             </label>
 
             {jenisPadi === 'sawah' ? (
@@ -312,38 +467,9 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
             )}
           </div>
 
-          {/* 3. DETEKSI / PILIH KECAMATAN */}
-          <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
-            <div className="flex items-center justify-between gap-2 mb-1.5">
-              <label className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Kecamatan di Lampung Utara:</span>
-              </label>
-              {detectedKecamatan && (
-                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full">
-                  Terdeteksi Spasial
-                </span>
-              )}
-            </div>
-
-            <select
-              value={selectedKecamatan}
-              onChange={(e) => setSelectedKecamatan(e.target.value)}
-              className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-semibold focus:ring-2 focus:ring-emerald-500 text-xs"
-            >
-              {allKecamatanList.length > 0 ? (
-                allKecamatanList.map((kec) => (
-                  <option key={kec} value={kec}>
-                    Kecamatan {kec}
-                  </option>
-                ))
-              ) : (
-                <option value="BUKIT KEMUNING">Kecamatan BUKIT KEMUNING</option>
-              )}
-            </select>
-          </div>
-
+          {/* ======================================================== */}
           {/* 4. INPUT HARA TANAH (JIKA METODE PUTS ATAU PUTK) */}
+          {/* ======================================================== */}
           {metode !== 'permentan' && (
             <div className="space-y-3">
               {/* Toggle Kualitatif vs Kuantitatif */}
@@ -456,7 +582,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                       placeholder="Contoh: 18.5 (<20 Rendah, 20-40 Sedang, >40 Tinggi)"
                       value={p2o5Val}
                       onChange={(e) => handleP2o5Change(e.target.value)}
-                      className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-semibold focus:ring-2 focus:ring-emerald-500 text-xs"
+                      className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-semibold focus:ring-2 focus:ring-emerald-500 text-xs shadow-xs"
                     />
                   </div>
 
@@ -474,7 +600,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                       placeholder="Contoh: 12.0 (<10 Rendah, 10-20 Sedang, >20 Tinggi)"
                       value={k2oVal}
                       onChange={(e) => handleK2oChange(e.target.value)}
-                      className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-semibold focus:ring-2 focus:ring-emerald-500 text-xs"
+                      className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-semibold focus:ring-2 focus:ring-emerald-500 text-xs shadow-xs"
                     />
                   </div>
                 </div>
@@ -482,7 +608,9 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
             </div>
           )}
 
+          {/* ======================================================== */}
           {/* 5. INPUT LUAS PETAK SAWAH PETANI (HEKTAR) */}
+          {/* ======================================================== */}
           <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/80 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase">
@@ -502,7 +630,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                   placeholder="Contoh: 0.5 atau 1"
                   value={luasPetak}
                   onChange={(e) => setLuasPetak(e.target.value)}
-                  className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-bold focus:ring-2 focus:ring-emerald-500 text-xs"
+                  className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-bold focus:ring-2 focus:ring-emerald-500 text-xs shadow-xs"
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">
                   ha
@@ -529,7 +657,9 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
             </div>
           </div>
 
+          {/* ======================================================== */}
           {/* 6. TARGET HASIL UREA & FAKTOR JERAMI (KHUSUS PADI SAWAH METODE PUTS) */}
+          {/* ======================================================== */}
           {jenisPadi === 'sawah' && metode === 'puts' && (
             <div className="space-y-3">
               <div>
@@ -577,7 +707,9 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
             </div>
           )}
 
+          {/* ======================================================== */}
           {/* 7. KOTAK HASIL REKOMENDASI DOSIS */}
+          {/* ======================================================== */}
           <div className="space-y-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide flex items-center gap-1.5">
@@ -687,80 +819,6 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
             <div>
               <span className="font-bold">CATATAN PENTING: </span>
               <span>Rekomendasi di atas mengacu pada {metode === 'permentan' ? 'Baku Tabel Lampiran A Permentan 13/2022' : jenisPadi === 'gogo' ? 'Panduan Terpadu PUTK / BRMP Padi Gogo' : 'Matriks Terpadu PUTS & Permentan 13/2022'}. Konsultasikan selalu dengan penyuluh (PPL) setempat.</span>
-            </div>
-          </div>
-
-          {/* FORM PEREKAMAN TITIK KE PETA */}
-          <div className="p-3.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2.5">
-            <h5 className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
-              <User className="w-4 h-4 text-emerald-600" />
-              <span>Perekaman Data Titik Survei:</span>
-            </h5>
-
-            {/* Nama Pencatat */}
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                Nama Pencatat / Surveyor:
-              </label>
-              <input
-                type="text"
-                placeholder="Nama Anda atau Petani / PPL"
-                value={surveyorName}
-                onChange={(e) => setSurveyorName(e.target.value)}
-                className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium text-xs focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
-
-            {/* Pilihan Titik Lokasi */}
-            <div className="space-y-1 pt-1">
-              <div className="flex items-center justify-between text-xs">
-                <label className="flex items-center gap-2 cursor-pointer font-medium">
-                  <input
-                    type="radio"
-                    name="locChoice"
-                    checked={useCurrentGps}
-                    onChange={() => setUseCurrentGps(true)}
-                    className="text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span>Gunakan Posisi GPS Sekarang</span>
-                </label>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseCurrentGps(false);
-                    onRequestManualPick();
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition ${
-                    !useCurrentGps
-                      ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                      : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
-                  }`}
-                >
-                  {isPickingManualLocation ? 'Sedang Tap Peta...' : 'Pilih Titik di Peta'}
-                </button>
-              </div>
-
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                Koordinat:{' '}
-                {currentCoordinates
-                  ? `${currentCoordinates[0].toFixed(5)}, ${currentCoordinates[1].toFixed(5)}`
-                  : 'Belum terdeteksi (Gunakan tombol GPS atau Ketuk Peta)'}
-              </div>
-            </div>
-
-            {/* Catatan Tambahan */}
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                Catatan Kondisi Lahan (Opsional):
-              </label>
-              <textarea
-                rows={2}
-                placeholder="Contoh: Varietas Inpari 32, fase vegetatif awal, pengairan tadah hujan..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500"
-              />
             </div>
           </div>
         </div>

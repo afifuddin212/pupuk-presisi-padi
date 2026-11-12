@@ -226,10 +226,28 @@ export function App() {
     setSurveyPoints([]);
   };
 
+  // Update otomatis kecamatan terdeteksi setiap kali ada koordinat baru atau GeoJSON termuat
+  useEffect(() => {
+    if (!geoJsonData) return;
+    const targetLoc = pickedLocation || userLocation;
+    if (targetLoc) {
+      const kec = findKecamatanByPoint(targetLoc[0], targetLoc[1], geoJsonData);
+      if (kec) {
+        setDetectedKecamatan(kec.nama);
+      }
+    }
+  }, [pickedLocation, userLocation, geoJsonData]);
+
   // Handler Klik Koordinat di Peta (Mendukung Manual Pick di Bidang Sawah)
   const handleMapClick = (coords: [number, number]) => {
     if (isPickingManualLocation) {
       setPickedLocation(coords);
+      if (geoJsonData) {
+        const kec = findKecamatanByPoint(coords[0], coords[1], geoJsonData);
+        if (kec) {
+          setDetectedKecamatan(kec.nama);
+        }
+      }
       setIsPickingManualLocation(false);
       setIsCalculatorOpen(true); // Buka kembali kalkulator dengan koordinat yang telah dipilih
     }
@@ -341,6 +359,9 @@ export function App() {
         detectedKecamatan={detectedKecamatan}
         allKecamatanList={allKecamatanList}
         currentCoordinates={pickedLocation || userLocation}
+        userLocation={userLocation}
+        pickedLocation={pickedLocation}
+        geoJsonData={geoJsonData}
         gpsAccuracy={pickedLocation ? undefined : gpsAccuracy}
         lastSurveyor={lastSurveyor}
         initialJenisPadi={calculatorPrefill.jenisPadi}
