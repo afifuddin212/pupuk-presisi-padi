@@ -3,6 +3,12 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { SurveyPoint } from '../types';
 
 /**
+ * URL Webhook Google Apps Script bawaan (Default)
+ */
+export const DEFAULT_WEBHOOK_URL =
+  'https://script.google.com/macros/library/d/1rv3-50H5VmttDPMG1IW8i6Ygf1Z7RIUKoKVxHeWHrsfpUaCb-XaGci6n/1';
+
+/**
  * Mengonversi array SurveyPoint menjadi format teks CSV
  */
 export function convertPointsToCSV(points: SurveyPoint[]): string {
@@ -126,7 +132,7 @@ export function triggerFileDownload(content: string, filename: string, mimeType:
  */
 export async function sendSurveyDataToWebhook(
   points: SurveyPoint[],
-  webhookUrl: string
+  webhookUrl: string = DEFAULT_WEBHOOK_URL
 ): Promise<{ success: boolean; message: string }> {
   if (points.length === 0) {
     return { success: false, message: 'Belum ada data titik survei yang tersimpan.' };
