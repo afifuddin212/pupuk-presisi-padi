@@ -7,14 +7,7 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Trash2, 
-  HelpCircle, 
-  Copy, 
-  Check, 
   FolderDown,
-  ChevronDown,
-  ChevronUp,
-  Settings,
-  RotateCcw,
   ExternalLink
 } from 'lucide-react';
 import { SurveyPoint } from '../types';
@@ -37,50 +30,18 @@ export const SurveyExportModal: React.FC<SurveyExportModalProps> = ({
   points,
   onClearAllPoints,
 }) => {
-  const [webhookUrl, setWebhookUrl] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem('pupuk_presisi_webhook_url');
-      if (saved && saved.trim() && !saved.includes('/macros/library/d/')) return saved.trim();
-      return DEFAULT_WEBHOOK_URL;
-    } catch {
-      return DEFAULT_WEBHOOK_URL;
-    }
-  });
-
   const [isSendingWebhook, setIsSendingWebhook] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
-  const [showWebhookSetting, setShowWebhookSetting] = useState<boolean>(false);
-  const [showSetupGuide, setShowSetupGuide] = useState<boolean>(false);
-  const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [resultMsg, setResultMsg] = useState<{ success: boolean; text: string } | null>(null);
 
   if (!isOpen) return null;
 
-  const handleWebhookChange = (url: string) => {
-    setWebhookUrl(url);
-    try {
-      localStorage.setItem('pupuk_presisi_webhook_url', url);
-    } catch (e) {
-      console.warn('Gagal menyimpan webhook url ke local storage:', e);
-    }
-  };
-
-  const handleResetDefaultWebhook = () => {
-    setWebhookUrl(DEFAULT_WEBHOOK_URL);
-    try {
-      localStorage.removeItem('pupuk_presisi_webhook_url');
-    } catch (e) {
-      console.warn('Gagal menghapus webhook url di local storage:', e);
-    }
-  };
-
-  // AKSI 1: Kirim ke WebHook Google Sheets
+  // AKSI 1: Kirim ke WebHook Google Sheets (Otomatis terhubung ke Spreadsheet Tim Peneliti)
   const handleSendWebhook = async () => {
-    const targetUrl = webhookUrl.trim() || DEFAULT_WEBHOOK_URL;
     setIsSendingWebhook(true);
     setResultMsg(null);
     try {
-      const res = await sendSurveyDataToWebhook(points, targetUrl);
+      const res = await sendSurveyDataToWebhook(points, DEFAULT_WEBHOOK_URL);
       setResultMsg({ success: res.success, text: res.message });
     } catch (e: any) {
       setResultMsg({ success: false, text: e?.message || 'Gagal mengirim data ke WebHook.' });
@@ -103,101 +64,7 @@ export const SurveyExportModal: React.FC<SurveyExportModalProps> = ({
     }
   };
 
-  const isDefaultUrl = webhookUrl.trim() === DEFAULT_WEBHOOK_URL.trim();
-  const isLibraryUrl = webhookUrl.includes('/macros/library/d/');
 
-  // Kode Google Apps Script untuk disalin oleh pengguna
-  const googleAppsScriptCode = `// ID Spreadsheet target (telah dihubungkan ke spreadsheet peneliti)
-var SPREADSHEET_ID = "1NLCFggTT1XY1E9nhhzvrR8n77RyQw3aPhG2ICpj2vn4";
-
-function getTargetSpreadsheet() {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    if (ss) return ss;
-  } catch (e) {}
-  return SpreadsheetApp.openById(SPREADSHEET_ID);
-}
-
-// Respon GET untuk pengujian di browser (mencegah error 403 saat dicek)
-function doGet(e) {
-  return ContentService.createTextOutput(JSON.stringify({
-    status: "ok",
-    message: "Webhook Rekomendasi Pemupukan Presisi Padi aktif dan siap menerima data survei!"
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  try {
-    var sheetName = "Data_Survei_Lapangan";
-    var ss = getTargetSpreadsheet();
-    var sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
-    
-    var headers = [
-      "ID Titik", "Waktu Catat", "Nama Surveyor", "Latitude", "Longitude",
-      "Akurasi (m)", "Sumber Koordinat", "Kecamatan", "Jenis Padi", "Metode",
-      "Luas Petak (ha)", "Status P", "Status K", "P2O5 Lab", "K2O Lab",
-      "Target Urea (kg/ha)", "Daur Ulang Jerami", "Urea Tunggal (kg/ha)",
-      "SP-36 Tunggal (kg/ha)", "KCl Tunggal (kg/ha)", "NPK 15-10-12 (kg/ha)",
-      "Urea Tambahan (kg/ha)", "SP-36 Tambahan (kg/ha)", "Catatan", "Waktu Diterima"
-    ];
-    
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(headers);
-      var headerRange = sheet.getRange(1, 1, 1, headers.length);
-      headerRange.setBackground("#059669").setFontColor("#FFFFFF").setFontWeight("bold");
-      sheet.setFrozenRows(1);
-    }
-    
-    var data = JSON.parse(e.postData.contents);
-    var points = data.points || [];
-    var now = Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM-dd HH:mm:ss") + " WIB";
-    
-    var existingIds = [];
-    if (sheet.getLastRow() > 1) {
-      existingIds = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().flat().map(String);
-    }
-    
-    for (var i = 0; i < points.length; i++) {
-      var p = points[i];
-      var row = [
-        p.id, p.timestamp, p.surveyor, p.latitude, p.longitude,
-        p.accuracy, p.source, p.kecamatan, p.jenisPadi, p.metode,
-        p.luasPetakHa, p.pStatus, p.kStatus, p.p2o5Lab, p.k2oLab,
-        p.targetUrea, p.hasStrawRecycled ? "Ya" : "Tidak", p.ureaTunggal,
-        p.sp36Tunggal, p.kclTunggal, p.npkMajemuk, p.ureaTambahan,
-        p.sp36Tambahan, p.notes, now
-      ];
-      
-      var idx = existingIds.indexOf(String(p.id));
-      if (idx !== -1) {
-        sheet.getRange(idx + 2, 1, 1, row.length).setValues([row]);
-      } else {
-        sheet.appendRow(row);
-        existingIds.push(String(p.id));
-      }
-    }
-    
-    return ContentService.createTextOutput(JSON.stringify({ status: "success", count: points.length }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-// Jalankan fungsi ini 1x di editor Apps Script untuk memberikan izin otorisasi spreadsheet
-function testOtorisasiDanSimulasi() {
-  var ss = getTargetSpreadsheet();
-  var sheetName = "Data_Survei_Lapangan";
-  var sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
-  Logger.log("✅ SUKSES TERHUBUNG KE SPREADSHEET: " + ss.getName());
-}`;
-
-  const handleCopyScript = () => {
-    navigator.clipboard.writeText(googleAppsScriptCode);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn select-none">
@@ -280,11 +147,11 @@ function testOtorisasiDanSimulasi() {
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                     <span className="text-slate-600 dark:text-slate-300 truncate">
-                      Target: <strong className="text-blue-800 dark:text-blue-200 font-mono">{isDefaultUrl ? 'WebHook Terintegrasi (Otomatis)' : 'WebHook Kustom'}</strong>
+                      Target: <strong className="text-blue-800 dark:text-blue-200 font-mono">Google Sheets Tim Peneliti</strong>
                     </span>
                   </div>
                   <span className="text-[9.5px] font-bold px-2 py-0.5 bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 rounded-full shrink-0 border border-blue-200 dark:border-blue-800">
-                    Siap Kirim
+                    Terhubung
                   </span>
                 </div>
 
@@ -307,109 +174,6 @@ function testOtorisasiDanSimulasi() {
                     </>
                   )}
                 </button>
-
-                {/* Pengaturan Webhook Google App Script (Toggle Accordion) */}
-                <div className="pt-1 border-t border-slate-200/70 dark:border-slate-700/60">
-                  <button
-                    type="button"
-                    onClick={() => setShowWebhookSetting(!showWebhookSetting)}
-                    className="flex items-center justify-between w-full text-left py-1 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-[11px] transition"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <Settings className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                      <span>Pengaturan Webhook Google App Script</span>
-                    </span>
-                    {showWebhookSetting ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
-
-                  {showWebhookSetting && (
-                    <div className="mt-2.5 p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3 animate-slideUp">
-                      {/* Input URL Webhook */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">
-                            URL Endpoint Webhook:
-                          </label>
-                          {!isDefaultUrl && (
-                            <button
-                              type="button"
-                              onClick={handleResetDefaultWebhook}
-                              className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold"
-                              title="Kembalikan ke URL default sistem"
-                            >
-                              <RotateCcw className="w-3 h-3" />
-                              <span>Reset ke Bawaan</span>
-                            </button>
-                          )}
-                        </div>
-                        <input
-                          type="url"
-                          placeholder="https://script.google.com/macros/s/.../exec"
-                          value={webhookUrl}
-                          onChange={(e) => handleWebhookChange(e.target.value)}
-                          className="w-full p-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-[11px] font-mono focus:ring-2 focus:ring-blue-500 shadow-2xs"
-                        />
-                      </div>
-
-                      {/* Peringatan & Petunjuk jika URL bertipe Library (/library/d/) */}
-                      {isLibraryUrl && (
-                        <div className="p-3 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 rounded-xl text-[10.5px] text-amber-900 dark:text-amber-200 space-y-1.5">
-                          <div className="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
-                            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-                            <span>Catatan Format URL Google Apps Script:</span>
-                          </div>
-                          <p className="leading-snug">
-                            URL di atas bertipe <strong>Library</strong> (<code>/macros/library/d/...</code>).
-                            Untuk menerima kiriman data webhook secara otomatis dari luar Google Workspace tanpa error izin, Google Apps Script harus diterapkan sebagai <strong>Aplikasi Web (Web App)</strong> agar menghasilkan URL berakhiran <code>/exec</code>.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Accordion Panduan Setup Script */}
-                      <div className="pt-1">
-                        <button
-                          type="button"
-                          onClick={() => setShowSetupGuide(!showSetupGuide)}
-                          className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline font-bold text-[10.5px]"
-                        >
-                          <HelpCircle className="w-3.5 h-3.5" />
-                          <span>{showSetupGuide ? 'Sembunyikan Panduan Kode Script' : 'Panduan Membuat Endpoint Web App /exec'}</span>
-                          {showSetupGuide ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                        </button>
-
-                        {showSetupGuide && (
-                          <div className="mt-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-2 text-[10.5px] leading-relaxed">
-                            <ol className="list-decimal pl-4 space-y-1 text-slate-600 dark:text-slate-300">
-                              <li>Buka Google Apps Script editor spreadsheet Anda.</li>
-                              <li>Salin kode script <code>doPost</code> di bawah ini:</li>
-                            </ol>
-
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={handleCopyScript}
-                                className="absolute right-2 top-2 px-2 py-1 bg-slate-800 text-white rounded-lg text-[9.5px] font-bold flex items-center gap-1 shadow hover:bg-slate-700"
-                              >
-                                {copiedCode ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                                <span>{copiedCode ? 'Tersalin!' : 'Salin Kode Script'}</span>
-                              </button>
-                              <pre className="p-2.5 bg-slate-900 text-emerald-400 rounded-xl overflow-x-auto text-[9.5px] font-mono max-h-32">
-                                {googleAppsScriptCode}
-                              </pre>
-                            </div>
-
-                            <ol start={3} className="list-decimal pl-4 space-y-1 text-slate-600 dark:text-slate-300">
-                              <li>Klik tombol biru <strong>Terapkan (Deploy)</strong> ➔ <strong>Penerapan baru (New deployment)</strong>.</li>
-                              <li>Pilih jenis <strong>Aplikasi web (Web app)</strong>.</li>
-                              <li>Atur <em>Yang memiliki akses</em>: <strong>Siapa saja (Anyone)</strong>.</li>
-                              <li>Salin URL Aplikasi Web yang berakhiran <code>/exec</code> lalu tempelkan ke kolom URL di atas.</li>
-                            </ol>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* ======================================================== */}

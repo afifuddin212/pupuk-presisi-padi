@@ -4,14 +4,17 @@ import {
   BookOpen, 
   AlertTriangle, 
   CheckCircle2, 
-  Smartphone, 
   MapPin, 
   Calculator, 
-  Share2, 
   Layers,
   Wheat,
   Info,
-  Table
+  SendHorizontal,
+  Download,
+  Sprout,
+  Sliders,
+  FolderDown,
+  Sparkles
 } from 'lucide-react';
 
 interface HelpModalProps {
@@ -19,201 +22,382 @@ interface HelpModalProps {
   onClose: () => void;
 }
 
+type HelpTab = 'layer' | 'kalkulator' | 'ekspor' | 'regulasi';
+
 export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'panduan' | 'regulasi'>('panduan');
+  const [activeTab, setActiveTab] = useState<HelpTab>('layer');
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn select-none">
       <div 
         className="w-full max-w-lg max-h-[88vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
+        {/* Header Modal */}
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shadow-xs">
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">
                 Pusat Bantuan &amp; Panduan
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Pupuk Presisi Padi Lampung Utara &bull; Permentan 13/2022
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition shrink-0"
+            title="Tutup Panduan"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="p-3 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-2 text-xs">
+        {/* Tab Switcher (4 Tab Ergonomis) */}
+        <div className="p-2 bg-slate-100 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700 grid grid-cols-4 gap-1 text-[11px] shrink-0">
           <button
-            onClick={() => setActiveTab('panduan')}
-            className={`py-2 px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition ${
-              activeTab === 'panduan'
-                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-800'
+            type="button"
+            onClick={() => setActiveTab('layer')}
+            className={`py-2 px-1 rounded-xl font-bold flex flex-col sm:flex-row items-center justify-center gap-1 transition text-center ${
+              activeTab === 'layer'
+                ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
-            <Smartphone className="w-4 h-4" />
-            <span>Cara Penggunaan</span>
+            <Layers className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Layer &amp; Peta</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('regulasi')}
-            className={`py-2 px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition ${
-              activeTab === 'regulasi'
-                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-800'
+            type="button"
+            onClick={() => setActiveTab('kalkulator')}
+            className={`py-2 px-1 rounded-xl font-bold flex flex-col sm:flex-row items-center justify-center gap-1 transition text-center ${
+              activeTab === 'kalkulator'
+                ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
-            <BookOpen className="w-4 h-4" />
-            <span>Dasar &amp; Formula Terpadu</span>
+            <Calculator className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Kalkulator</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('ekspor')}
+            className={`py-2 px-1 rounded-xl font-bold flex flex-col sm:flex-row items-center justify-center gap-1 transition text-center ${
+              activeTab === 'ekspor'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            }`}
+          >
+            <SendHorizontal className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Kirim &amp; Ekspor</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('regulasi')}
+            className={`py-2 px-1 rounded-xl font-bold flex flex-col sm:flex-row items-center justify-center gap-1 transition text-center ${
+              activeTab === 'regulasi'
+                ? 'bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Regulasi</span>
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-700 dark:text-slate-300 custom-scrollbar leading-relaxed">
-          {activeTab === 'panduan' ? (
-            /* TAB 1: PANDUAN PENGGUNAAN APLIKASI */
-            <div className="space-y-4">
-              <div className="bg-emerald-50 dark:bg-emerald-950/40 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800/60">
-                <h4 className="font-bold text-emerald-900 dark:text-emerald-300 text-sm mb-1">
-                  Panduan Lapangan untuk Petani &amp; Penyuluh (PPL):
-                </h4>
-                <p className="text-[11px] text-emerald-800 dark:text-emerald-300">
-                  Aplikasi ini membantu menentukan takaran pupuk berimbang untuk <strong>Padi Sawah</strong> dan <strong>Padi Gogo</strong> secara presisi sesuai kondisi tanah setempat.
-                </p>
-              </div>
-
-              {/* Langkah 1 */}
-              <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/60">
-                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">
-                  1
-                </div>
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs text-slate-700 dark:text-slate-300 custom-scrollbar leading-relaxed">
+          {/* ============================================================ */}
+          {/* TAB 1: PENGATURAN LAYER & PETA TEMATIK                       */}
+          {/* ============================================================ */}
+          {activeTab === 'layer' && (
+            <div className="space-y-3.5 animate-fadeIn">
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 flex items-start gap-2.5">
+                <Layers className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <h5 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                    Pilih Wilayah Kecamatan di Peta
-                  </h5>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    Ketuk langsung salah satu poligon kecamatan di peta. Akan muncul pop-up yang menyajikan <strong>4 jenis rekomendasi</strong>:
-                    <br />
-                    • <strong>InaSoilAgro</strong>: Sesuai data spasial peta.
-                    <br />
-                    • <strong>Permentan 13/2022</strong>: Dosis baku tabel kecamatan.
-                    <br />
-                    • <strong>PUTS (Padi Sawah)</strong>: Formula uji sawah presisi.
-                    <br />
-                    • <strong>PUTK (Padi Gogo)</strong>: Formula lahan kering masam.
-                    <br />
-                    Gunakan tombol <em>Bandingkan Semua</em> untuk melihat tabel perbandingan secara langsung.
+                  <h4 className="font-bold text-emerald-950 dark:text-emerald-200 text-xs mb-0.5">
+                    Manajemen Multi-Layer &amp; Peta Tematik:
+                  </h4>
+                  <p className="text-[11px] text-emerald-900 dark:text-emerald-300">
+                    Aplikasi menyajikan 5 layer spasial terpadu. Ketuk ikon <strong>Layers</strong> (tumpukan layer) pada panel navigasi bawah (Floating HUD) untuk mengatur visibilitas dan transparansi peta.
                   </p>
                 </div>
               </div>
 
-              {/* Langkah 2 */}
-              <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/60">
-                <div className="w-7 h-7 rounded-full bg-amber-500 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">
-                  2
+              {/* 5 Layer Spasial */}
+              <div className="space-y-2">
+                {/* Layer 1 */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                      1. Peta Rekomendasi Pemupukan Padi (InaSoilAgro)
+                    </h5>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-4.5">
+                    Menampilkan batas 23 kecamatan di Lampung Utara dengan status hara makro tanah (P &amp; K) serta dosis rekomendasi pemupukan padi bawaan spasial InaSoilAgro.
+                  </p>
                 </div>
-                <div>
-                  <h5 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Calculator className="w-3.5 h-3.5 text-amber-500" />
-                    Buka Kalkulator Pemupukan Presisi
-                  </h5>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    Ketuk tombol besar berwarna <strong>kuning keemasan</strong> (bertuliskan <strong>HITUNG</strong>) di pojok kanan bawah layar atau tombol <em>Hitung dengan Luas Petak</em> dari pop-up kecamatan.
+
+                {/* Layer 2 */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-lime-500 shrink-0" />
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                      2. Peta Kesesuaian Lahan Padi (BBSDLP)
+                    </h5>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-4.5">
+                    Mengevaluasi kelayakan biofisik tanah untuk 3 sub-komoditas: <strong>Padi Irigasi</strong>, <strong>Padi Tadah Hujan</strong>, dan <strong>Padi Gogo</strong>.
+                    <br />
+                    • <strong>Kelas Simbologi</strong>: S1 (Sangat Sesuai - Hijau Tua), S2 (Cukup Sesuai - Hijau Muda), S3 (Sesuai Marginal - Emas), N (Tidak Sesuai - Merah), dan Tidak Dinilai (Abu-abu Slate bertekstur, bukan area sawah).
+                    <br />
+                    • <strong>Faktor Pembatas</strong>: Menampilkan kendala biofisik spesifik (suhu <em>tc</em>, ketersediaan air <em>wa</em>, drainase/aerasi <em>oa</em>, perakaran <em>rc</em>, retensi hara/pH masam <em>nr</em>, toksisitas <em>xc</em>, erosi <em>eh</em>, bahaya banjir <em>fh</em>).
+                  </p>
+                </div>
+
+                {/* Layer 3 */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                      3. Peta Lahan Baku Sawah (LBS)
+                    </h5>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-4.5">
+                    Delineasi riil 3.408 petak sawah baku di Lampung Utara berdasarkan jenis pengairan: Irigasi Teknis/Semi Teknis, Tadah Hujan, Pasang Surut, dan Rawa Lebak dengan garis pematang putih tegas.
+                  </p>
+                </div>
+
+                {/* Layer 4 */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-orange-600 shrink-0" />
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                      4. Peta Jenis Tanah (Satuan Peta Tanah / SPT)
+                    </h5>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-4.5">
+                    Menampilkan ordo dan jenis tanah utama (<em>Latosol</em>, <em>Kambisol</em>, <em>Litosol</em>, <em>Gleysol</em>) beserta sifat kesuburan kimia (pH, KTK, Kejenuhan Basa) dan morfologi lereng/drainase.
+                  </p>
+                </div>
+
+                {/* Layer 5 */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0" />
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                      5. Batas Administrasi Kecamatan
+                    </h5>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-4.5">
+                    Outline garis batas delineasi 23 kecamatan tanpa isian poligon transparan, berfungsi membingkai wilayah kerja lapangan secara tegas.
                   </p>
                 </div>
               </div>
 
-              {/* Langkah 3 */}
-              <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/60">
-                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">
-                  3
-                </div>
+              {/* Tips Navigasi & Legenda Mengambang */}
+              <div className="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-900/60 space-y-1.5 text-[11px]">
+                <h5 className="font-bold text-blue-950 dark:text-blue-200 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+                  Fitur Ergonomi Lapangan:
+                </h5>
+                <ul className="list-disc pl-4 space-y-1 text-blue-900 dark:text-blue-300">
+                  <li><strong>Legenda Mini Mengambang</strong>: Muncul otomatis di pojok kiri atas peta saat layer aktif dibuka, sehingga Anda tidak perlu bolak-balik membuka menu pengaturan layer.</li>
+                  <li><strong>Slider Opasitas (Transparansi)</strong>: Sesuaikan kepekatan warna layer (0%–100%) agar citra satelit atau batas petak sawah di bawahnya tetap terlihat jelas.</li>
+                  <li><strong>Klik Luar Wilayah untuk Deselect</strong>: Menyentuh area di luar Kabupaten Lampung Utara otomatis membatalkan pilihan poligon aktif.</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================ */}
+          {/* TAB 2: PENGGUNAAN KALKULATOR REKOMENDASI PEMUPUKAN           */}
+          {/* ============================================================ */}
+          {activeTab === 'kalkulator' && (
+            <div className="space-y-3.5 animate-fadeIn">
+              <div className="bg-amber-50 dark:bg-amber-950/40 p-3.5 rounded-2xl border border-amber-200 dark:border-amber-800/60 flex items-start gap-2.5">
+                <Calculator className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <h5 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Wheat className="w-3.5 h-3.5 text-emerald-600" />
-                    Pilih Jenis Tanaman &amp; Metode Rekomendasi
-                  </h5>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    • <strong>Padi Sawah</strong>: Anda dapat memilih metode <em>Permentan 13/2022</em> (algoritma presisi status hara P &amp; K) atau <em>PUTS (Uji Sawah)</em>.<br />
-                    • <strong>Padi Gogo</strong>: Menggunakan metode <em>PUTK (Perangkat Uji Tanah Kering / BRMP)</em> yang khusus disesuaikan untuk tanah kering masam.
+                  <h4 className="font-bold text-amber-950 dark:text-amber-200 text-xs mb-0.5">
+                    Kalkulator Pemupukan Presisi Padi:
+                  </h4>
+                  <p className="text-[11px] text-amber-900 dark:text-amber-300">
+                    Menghitung takaran pupuk berimbang nyata siap tebar berdasarkan luas petak sawah dan status hara tanah setempat.
                   </p>
                 </div>
               </div>
 
-              {/* Langkah 4 */}
-              <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/60">
-                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">
-                  4
-                </div>
-                <div>
-                  <h5 className="font-bold text-slate-900 dark:text-white">
-                    Isi Luas Petak &amp; Status Hara Tanah
-                  </h5>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    • <strong>Luas Petak (ha)</strong>: Masukkan luasan petak sawah petani (contoh: 0.25 ha, 0.5 ha, 1 ha) agar hasil takaran pupuk langsung dalam kilogram nyata siap tebar.<br />
-                    • <strong>Metode Kualitatif</strong>: Pilih langsung Rendah / Sedang / Tinggi sesuai warna uji PUTS/PUTK.<br />
-                    • <strong>Metode Kuantitatif</strong>: Masukkan angka laboratorium (P₂O₅ dan K₂O).
+              {/* Tahapan Kalkulator */}
+              <div className="space-y-2.5">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center text-[10px] shrink-0">
+                      1
+                    </span>
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                      Perekaman Titik Survei &amp; Deteksi Lokasi Otomatis
+                    </h5>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-7">
+                    • Terletak di kotak paling atas kalkulator agar tidak terlewat.<br />
+                    • Masukkan nama surveyor/petani.<br />
+                    • <strong>Kecamatan Terisi Otomatis</strong>: Sistem membaca otomatis nama kecamatan dari koordinat GPS perangkat atau titik sawah yang Anda ketuk di peta.
                   </p>
                 </div>
-              </div>
 
-              {/* Langkah 5 */}
-              <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/60">
-                <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">
-                  5
-                </div>
-                <div>
-                  <h5 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Share2 className="w-3.5 h-3.5 text-blue-600" />
-                    Simpan Titik &amp; Kirim Data ke Peneliti
-                  </h5>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    Simpan titik survei langsung ke peta offline Anda. Gunakan tombol <strong>KIRIM DATA SURVEI</strong> untuk membagikan data rekapitulasi (CSV/GeoJSON) ke WhatsApp grup penyuluh atau langsung ke webhook Google Sheets peneliti.
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center text-[10px] shrink-0">
+                      2
+                    </span>
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                      Pilihan Komoditas &amp; Metode Rekomendasi
+                    </h5>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-7">
+                    • <strong>Padi Sawah</strong>: Pilihan metode <em>Permentan 13/2022</em> (algoritma status hara tanah) atau <em>PUTS (Uji Sawah)</em>.<br />
+                    • <strong>Padi Gogo</strong>: Menggunakan metode <em>PUTK (Tanah Kering Masam)</em> dengan penyesuaian fiksasi fosfat tinggi.<br />
+                    • <em>InaSoilAgro</em>: Data acuan spasial bawaan peta kecamatan dapat dilihat langsung pada kartu pop-up poligon di peta.
                   </p>
                 </div>
-              </div>
 
-              {/* CATATAN PENTING */}
-              <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3 rounded-2xl flex items-start gap-2 text-[11px] text-amber-900 dark:text-amber-200">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-bold">CATATAN PENTING: </span>
-                  <span>Konsultasikan hasil ini dengan penyuluh (PPL) setempat untuk mengatur jadwal pemupukan (fase vegetatif dan generatif) serta kondisi air sawah.</span>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center text-[10px] shrink-0">
+                      3
+                    </span>
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                      Input Luas Petak &amp; Status Hara Tanah
+                    </h5>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-7">
+                    • <strong>Luas Petak (Ha)</strong>: Masukkan luasan petak nyata (misal: 0.25 ha, 0.5 ha, 1 ha) agar hasil takaran pupuk langsung dalam kilogram siap tebar.<br />
+                    • <strong>Metode Kualitatif</strong>: Pilih Rendah, Sedang, atau Tinggi sesuai hasil warna reaksi uji tanah (PUTS/PUTK).<br />
+                    • <strong>Metode Kuantitatif</strong>: Masukkan angka uji laboratorium (P₂O₅ dan K₂O).
+                  </p>
+                </div>
+
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center text-[10px] shrink-0">
+                      4
+                    </span>
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                      Target Hasil Panen &amp; Daur Ulang Jerami
+                    </h5>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-7">
+                    • Pilih target tonase (&lt;5 ton, 5–6 ton, atau &gt;6 ton/ha).<br />
+                    • Aktifkan opsi <strong>Daur Ulang Jerami</strong> jika jerami panen dikembalikan ke sawah untuk menghemat kebutuhan pupuk Kalium (KCl) hingga 50%.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center text-[10px] shrink-0">
+                      5
+                    </span>
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                      Hasil Rekomendasi Ganda &amp; SP-36 Tambahan
+                    </h5>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-7">
+                    • <strong>Paket Tunggal</strong>: Takaran Urea + SP-36 + KCl.<br />
+                    • <strong>Paket Majemuk</strong>: Takaran NPK 15-10-12 subsidi + Urea penutup defisit.<br />
+                    • <strong>Wajib SP-36 Tambahan (Padi Gogo)</strong>: Pada lahan masam, sistem menghitung otomatis kekurangan fosfat: <em>"Petani harus memberikan SP-36 Tambahan sebanyak [X] kg"</em>.<br />
+                    • Ketuk <strong>SIMPAN DATA TITIK KE PETA</strong> untuk menyimpan data ke memori offline.
+                  </p>
                 </div>
               </div>
             </div>
-          ) : (
-            /* TAB 2: DASAR REGULASI & FORMULA TERPADU */
-            <div className="space-y-4">
-              <div className="bg-emerald-50/80 dark:bg-emerald-950/40 p-3.5 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/50">
-                <h4 className="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5 mb-1 text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Landasan Regulasi &amp; Pustaka
-                </h4>
-                <p>
-                  Mengacu pada <strong>Permentan No. 13 Tahun 2022</strong> tentang Dosis Pupuk N, P, K untuk Lahan Sawah, dipadukan dengan standar teknis <strong>Uji Tanah Sawah (PUTS)</strong> dan <strong>Uji Tanah Kering (PUTK / BRMP)</strong>.
+          )}
+
+          {/* ============================================================ */}
+          {/* TAB 3: PEREKAMAN & EKSPOR DATA                               */}
+          {/* ============================================================ */}
+          {activeTab === 'ekspor' && (
+            <div className="space-y-3.5 animate-fadeIn">
+              <div className="bg-blue-50 dark:bg-blue-950/40 p-3.5 rounded-2xl border border-blue-200 dark:border-blue-900/60 flex items-start gap-2.5">
+                <SendHorizontal className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-blue-950 dark:text-blue-200 text-xs mb-0.5">
+                    Pengiriman &amp; Unduh Data Lapangan:
+                  </h4>
+                  <p className="text-[11px] text-blue-900 dark:text-blue-300">
+                    Aplikasi menyediakan 2 jalur pengiriman data yang sangat praktis dan bebas ribet untuk tim survei lapangan:
+                  </p>
+                </div>
+              </div>
+
+              {/* Jalur 1: Webhook */}
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-extrabold flex items-center justify-center text-xs shrink-0">
+                    1
+                  </span>
+                  <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                    Pengiriman Data lewat WebHook Google Sheets (Otomatis)
+                  </h5>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-8">
+                  • <strong>Terintegrasi Otomatis</strong>: Aplikasi telah dikonfigurasi terhubung langsung ke Google Sheets tim peneliti.<br />
+                  • Cukup ketuk tombol <strong>KIRIM DATA SEKARANG</strong>.<br />
+                  • Seluruh titik survei yang direkam akan tersinkronisasi ke tab spreadsheet secara real-time begitu perangkat terhubung ke internet.
                 </p>
               </div>
 
-              {/* Ambang Batas Kuantitatif */}
+              {/* Jalur 2: Download Lokal */}
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center text-xs shrink-0">
+                    2
+                  </span>
+                  <h5 className="font-bold text-slate-900 dark:text-white text-xs">
+                    Download Data secara Lokal (Offline-First)
+                  </h5>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-8">
+                  • <strong>Aplikasi Android (APK/Capacitor)</strong>: Sistem otomatis membuat folder khusus <code>PupukPresisi</code> di dalam direktori <code>Documents/</code> memori internal perangkat Anda, dan menyimpan berkas <strong>CSV</strong> dan <strong>GeoJSON</strong>.<br />
+                  • <strong>Web Browser</strong>: Mengunduh langsung berkas CSV &amp; GeoJSON ke folder Download perangkat Anda.<br />
+                  • Berkas dapat dibuka langsung di Microsoft Excel, Google MyMaps, QGIS, atau dibagikan ke WhatsApp grup petani.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================ */}
+          {/* TAB 4: DASAR REGULASI & FORMULA TERPADU                      */}
+          {/* ============================================================ */}
+          {activeTab === 'regulasi' && (
+            <div className="space-y-3.5 animate-fadeIn">
+              <div className="bg-purple-50 dark:bg-purple-950/40 p-3.5 rounded-2xl border border-purple-200 dark:border-purple-800/60 flex items-start gap-2.5">
+                <CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-purple-950 dark:text-purple-200 text-xs mb-0.5">
+                    Landasan Regulasi &amp; Pustaka:
+                  </h4>
+                  <p className="text-[11px] text-purple-900 dark:text-purple-300">
+                    Mengacu pada <strong>Permentan No. 13 Tahun 2022</strong> dipadukan dengan pedoman teknis Balitbangtan/BBSDLP untuk <strong>PUTS (Uji Sawah)</strong> dan <strong>PUTK / BRMP (Uji Tanah Kering Masam)</strong>.
+                  </p>
+                </div>
+              </div>
+
+              {/* Tabel Status Hara */}
               <div>
-                <h4 className="font-bold text-slate-900 dark:text-white mb-2 text-sm">
+                <h5 className="font-bold text-slate-900 dark:text-white mb-1.5 text-xs">
                   1. Ambang Batas Status Hara Tanah (Pasal 6 Permentan 13/2022)
-                </h4>
-                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                </h5>
+                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-2xs">
                   <table className="w-full text-left text-[11px]">
                     <thead className="bg-slate-100 dark:bg-slate-800 font-semibold text-slate-900 dark:text-white">
                       <tr>
@@ -244,11 +428,11 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               {/* Formula Padi Sawah */}
-              <div>
-                <h4 className="font-bold text-slate-900 dark:text-white mb-1.5 text-sm">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                <h5 className="font-bold text-slate-900 dark:text-white text-xs">
                   2. Formula Rekomendasi Padi Sawah (PUTS &amp; Permentan 13/2022)
-                </h4>
-                <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-300 text-[11px]">
+                </h5>
+                <ul className="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-300 text-[11px]">
                   <li><strong>Target Urea Dasar</strong>: 250 kg/ha (&lt;5 ton), 300 kg/ha (5-6 ton), atau 350 kg/ha (&gt;6 ton).</li>
                   <li><strong>SP-36</strong>: Rendah = 100 kg/ha | Sedang = 75 kg/ha | Tinggi = 50 kg/ha.</li>
                   <li><strong>KCl</strong>: Rendah = 100 kg/ha | Sedang &amp; Tinggi = 50 kg/ha.</li>
@@ -258,26 +442,26 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               {/* Formula Padi Gogo */}
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl space-y-2">
-                <h4 className="font-bold text-amber-900 dark:text-amber-200 text-sm flex items-center gap-1.5">
-                  <Wheat className="w-4 h-4 text-amber-600" />
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 rounded-2xl space-y-1 text-amber-950 dark:text-amber-200">
+                <h5 className="font-bold text-xs flex items-center gap-1.5">
+                  <Wheat className="w-4 h-4 text-amber-600 shrink-0" />
                   3. Formula Khusus Padi Gogo / Lahan Kering (PUTK / BRMP)
-                </h4>
+                </h5>
                 <p className="text-[11px] text-amber-900 dark:text-amber-300">
                   Pada tanah kering masam (Ultisol/Podsolik), terjadi fiksasi fosfat yang sangat tinggi oleh ion Al³⁺ dan Fe³⁺. Oleh karena itu:
                 </p>
-                <ul className="list-disc pl-4 space-y-1 text-amber-900 dark:text-amber-300 text-[11px]">
+                <ul className="list-disc pl-4 space-y-0.5 text-[11px] text-amber-900 dark:text-amber-300">
                   <li>Kebutuhan pupuk Fosfat (SP-36) mencapai <strong>2 kali lipat</strong> (100–200 kg/ha).</li>
                   <li>Target Urea dasar baku ditetapkan <strong>300 kg/ha</strong>.</li>
                   <li><strong>Wajib SP-36 Tambahan</strong>: Pupuk subsidi NPK 15-10-12 hanya memiliki 10% fosfat, sehingga petani <strong>harus memberikan SP-36 Tambahan (50–75 kg/ha)</strong> pada paket majemuk agar kebutuhan hara fosfat tanaman tercukupi.</li>
                 </ul>
               </div>
 
-              {/* Ketetapan Permentan Baku Kecamatan */}
-              <div>
-                <h4 className="font-bold text-slate-900 dark:text-white mb-1.5 text-sm">
+              {/* Ketetapan Baku Permentan */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/70 space-y-1">
+                <h5 className="font-bold text-slate-900 dark:text-white text-xs">
                   4. Ketetapan Baku Per-Kecamatan di Lampung Utara (Lampiran A)
-                </h4>
+                </h5>
                 <p className="text-slate-600 dark:text-slate-400 text-[11px]">
                   Untuk seluruh 23 kecamatan di Kabupaten Lampung Utara, lampiran Permentan 13/2022 menetapkan dosis baku sawah:
                   <br />
@@ -287,23 +471,24 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </p>
               </div>
 
-              {/* CATATAN PENTING */}
-              <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3 rounded-2xl flex items-start gap-2 text-[11px] text-amber-900 dark:text-amber-200">
+              {/* Catatan Konsultasi PPL */}
+              <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-3 rounded-2xl flex items-start gap-2 text-[11px] text-amber-900 dark:text-amber-200">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold">CATATAN PENTING: </span>
-                  <span>Rekomendasi di atas merupakan acuan resmi. Konsultasikan dengan penyuluh pertanian lapangan (PPL) setempat untuk implementasi riil.</span>
+                  <span>Rekomendasi di atas merupakan acuan ilmiah resmi. Konsultasikan jadwal pemupukan (fase vegetatif dan generatif) serta kondisi air sawah dengan penyuluh (PPL) setempat.</span>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Footer Button */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+        {/* Footer Modal */}
+        <div className="p-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 shrink-0">
           <button
+            type="button"
             onClick={onClose}
-            className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg transition text-xs flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-md transition text-xs flex items-center justify-center gap-1.5"
           >
             <span>Tutup Panduan</span>
           </button>
