@@ -65,12 +65,12 @@ jobs:
       - name: Build Debug APK (Ready for Device Sideloading)
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleDebug --no-daemon --stacktrace > build.log 2>&1 || (cat build.log | tail -n 80 | while IFS= read -r line; do echo "::error::$line"; done; exit 1)
 
       - name: Build Release Bundle (AAB for Google Play Store)
         run: |
           cd android
-          ./gradlew bundleRelease --no-daemon --stacktrace
+          ./gradlew bundleRelease --no-daemon --stacktrace > bundle.log 2>&1 || (cat bundle.log | tail -n 80 | while IFS= read -r line; do echo "::error::$line"; done; exit 1)
 
       - name: Build Release APK (Unsigned)
         run: |
