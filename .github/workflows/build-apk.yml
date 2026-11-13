@@ -50,50 +50,48 @@ jobs:
       - name: Sync Capacitor Android
         run: npx cap sync android
 
-      - name: Setup Android SDK Environment & Platform 35
+      - name: Setup Android SDK Environment & Platforms
         run: |
           sudo chmod -R 777 "$ANDROID_HOME"
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           echo "Accepting licenses..."
           yes | "$SDKMANAGER" --licenses || true
-          echo "Installing platforms;android-35 and build-tools;35.0.0..."
-          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
+          echo "Installing Android SDK platforms and build-tools..."
+          "$SDKMANAGER" "platforms;android-35" "platforms;android-34" "build-tools;35.0.0" "build-tools;34.0.0"
 
       - name: Make Gradle Wrapper Executable
         run: chmod +x android/gradlew
 
       - name: Build Debug APK (Ready for Device Sideloading)
-        id: build_debug
         run: |
           cd android
           ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee ../gradle_debug.log
-        continue-on-error: true
-
-      - name: Verify Debug Build
-        if: steps.build_debug.outcome != 'success'
-        run: |
-          echo "::error::Gradle assembleDebug failed. Printing error log summary:"
-          tail -n 120 gradle_debug.log
-          exit 1
 
       - name: Build Release Bundle (AAB for Google Play Store)
-        id: build_bundle
         run: |
           cd android
           ./gradlew bundleRelease --no-daemon --stacktrace 2>&1 | tee ../gradle_bundle.log
-        continue-on-error: true
-
-      - name: Verify Bundle Build
-        if: steps.build_bundle.outcome != 'success'
-        run: |
-          echo "::error::Gradle bundleRelease failed. Printing error log summary:"
-          tail -n 120 gradle_bundle.log
-          exit 1
 
       - name: Build Release APK (Unsigned)
         run: |
           cd android
-          ./gradlew assembleRelease --no-daemon --stacktrace || true
+          ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tee ../gradle_release.log || true
+
+      - name: Print Gradle Error on Failure
+        if: failure()
+        run: |
+          echo "::error::Gradle build failed. Printing last 100 lines of log:"
+          tail -n 100 gradle_debug.log 2>/dev/null || true
+          tail -n 100 gradle_bundle.log 2>/dev/null || true
+
+      - name: Upload Build Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-logs
+          path: gradle_*.log
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: List Generated Build Outputs
         run: |
@@ -104,7 +102,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pupuk-presisi-padi-debug-apk
-          path: android/app/build/outputs/apk/**/*.apk
+          path: android/app/build/outputs/apk/debug/
           if-no-files-found: warn
           retention-days: 30
 
@@ -112,6 +110,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pupuk-presisi-padi-playstore-aab
-          path: android/app/build/outputs/bundle/**/*.aab
+          path: android/app/build/outputs/bundle/release/
           if-no-files-found: warn
           retention-days: 30
