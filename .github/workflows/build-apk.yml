@@ -63,14 +63,32 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Build Debug APK (Ready for Device Sideloading)
+        id: build_debug
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee ../gradle_debug.log
+        continue-on-error: true
+
+      - name: Verify Debug Build
+        if: steps.build_debug.outcome != 'success'
+        run: |
+          echo "::error::Gradle assembleDebug failed. Printing error log summary:"
+          tail -n 120 gradle_debug.log
+          exit 1
 
       - name: Build Release Bundle (AAB for Google Play Store)
+        id: build_bundle
         run: |
           cd android
-          ./gradlew bundleRelease --no-daemon --stacktrace
+          ./gradlew bundleRelease --no-daemon --stacktrace 2>&1 | tee ../gradle_bundle.log
+        continue-on-error: true
+
+      - name: Verify Bundle Build
+        if: steps.build_bundle.outcome != 'success'
+        run: |
+          echo "::error::Gradle bundleRelease failed. Printing error log summary:"
+          tail -n 120 gradle_bundle.log
+          exit 1
 
       - name: Build Release APK (Unsigned)
         run: |
