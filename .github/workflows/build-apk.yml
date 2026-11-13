@@ -65,33 +65,17 @@ jobs:
       - name: Build Debug APK (Ready for Device Sideloading)
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee ../gradle_debug.log
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Build Release Bundle (AAB for Google Play Store)
         run: |
           cd android
-          ./gradlew bundleRelease --no-daemon --stacktrace 2>&1 | tee ../gradle_bundle.log
+          ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Build Release APK (Unsigned)
         run: |
           cd android
-          ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tee ../gradle_release.log || true
-
-      - name: Print Gradle Error on Failure
-        if: failure()
-        run: |
-          echo "::error::Gradle build failed. Printing last 100 lines of log:"
-          tail -n 100 gradle_debug.log 2>/dev/null || true
-          tail -n 100 gradle_bundle.log 2>/dev/null || true
-
-      - name: Upload Build Logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gradle-build-logs
-          path: gradle_*.log
-          if-no-files-found: ignore
-          retention-days: 7
+          ./gradlew assembleRelease --no-daemon --stacktrace || true
 
       - name: List Generated Build Outputs
         run: |
@@ -102,14 +86,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pupuk-presisi-padi-debug-apk
-          path: android/app/build/outputs/apk/debug/
-          if-no-files-found: warn
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
           retention-days: 30
 
       - name: Upload Release AAB (Google Play Store)
         uses: actions/upload-artifact@v4
         with:
           name: pupuk-presisi-padi-playstore-aab
-          path: android/app/build/outputs/bundle/release/
-          if-no-files-found: warn
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
           retention-days: 30
