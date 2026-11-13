@@ -95,18 +95,23 @@ jobs:
           cd android
           ./gradlew assembleRelease --no-daemon --stacktrace || true
 
+      - name: List Generated Build Outputs
+        run: |
+          echo "=== Build Outputs in android/app/build/outputs ==="
+          find android/app/build/outputs -type f || true
+
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: pupuk-presisi-padi-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+          path: android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: warn
           retention-days: 30
 
       - name: Upload Release AAB (Google Play Store)
         uses: actions/upload-artifact@v4
         with:
           name: pupuk-presisi-padi-playstore-aab
-          path: android/app/build/outputs/bundle/release/app-release.aab
+          path: android/app/build/outputs/bundle/**/*.aab
           if-no-files-found: warn
           retention-days: 30
