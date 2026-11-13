@@ -25,8 +25,7 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
-# Capacitor & Android builds
-android/
+# Capacitor & iOS builds
 ios/
 capacitor.config.json.bak
 

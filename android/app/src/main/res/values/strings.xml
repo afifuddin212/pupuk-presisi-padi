@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pupuk Presisi Padi</string>
+    <string name="title_activity_main">Pupuk Presisi Padi</string>
+    <string name="package_name">com.pupukpresisi.lampungutara</string>
+    <string name="custom_url_scheme">com.pupukpresisi.lampungutara</string>
+</resources>
