@@ -17,6 +17,9 @@ concurrency:
   group: 'android-build'
   cancel-in-progress: true
 
+env:
+  ACTIONS_RUNNER_FORCE_NODE24: 'true'
+
 jobs:
   build-android:
     name: Build APK and AAB
@@ -32,10 +35,10 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Setup Node.js
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: 'npm'
 
       - name: Install Dependencies
@@ -47,10 +50,14 @@ jobs:
       - name: Sync Capacitor Android
         run: npx cap sync android
 
-      - name: Accept Android SDK Licenses & Install Platform 35
+      - name: Setup Android SDK Environment & Platform 35
         run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0" || true
+          sudo chmod -R 777 "$ANDROID_HOME"
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          echo "Accepting licenses..."
+          yes | "$SDKMANAGER" --licenses || true
+          echo "Installing platforms;android-35 and build-tools;35.0.0..."
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Make Gradle Wrapper Executable
         run: chmod +x android/gradlew
