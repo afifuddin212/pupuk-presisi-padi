@@ -18,6 +18,7 @@ import { HaraStatus, SurveyPoint, JenisPadi, MetodeRekomendasi } from '../types'
 import { hitungRekomendasiPupuk } from '../utils/fertilizerCalculator';
 import { convertP2O5ToStatus, convertK2OToStatus } from '../utils/putsConverter';
 import { findKecamatanByPoint } from '../utils/spatialUtils';
+import { getCalculatorDraft, saveCalculatorDraft } from '../utils/storageUtils';
 
 interface CalculatorSheetProps {
   isOpen: boolean;
@@ -62,35 +63,69 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
   onRequestManualPick,
   isPickingManualLocation,
 }) => {
+  // Load draf isian tersimpan jika ada (mencegah input hilang jika keluar aplikasi)
+  const initialDraft = getCalculatorDraft();
+
   // Perekaman Titik Survei State (Paling Atas)
-  const [surveyorName, setSurveyorName] = useState<string>(lastSurveyor || '');
+  const [surveyorName, setSurveyorName] = useState<string>(lastSurveyor || initialDraft?.surveyorName || '');
   const [useCurrentGps, setUseCurrentGps] = useState<boolean>(true);
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>(detectedKecamatan || 'BUKIT KEMUNING');
   const [isAutoDetected, setIsAutoDetected] = useState<boolean>(true);
-  const [notes, setNotes] = useState<string>('');
+  const [notes, setNotes] = useState<string>(initialDraft?.notes || '');
 
   // Jenis Padi (Sawah vs Gogo) & Metode
-  const [jenisPadi, setJenisPadi] = useState<JenisPadi>(initialJenisPadi || 'sawah');
-  const [metode, setMetode] = useState<MetodeRekomendasi>(initialMetode || 'puts');
-  const [mode, setMode] = useState<'kualitatif' | 'kuantitatif'>('kualitatif');
+  const [jenisPadi, setJenisPadi] = useState<JenisPadi>(initialJenisPadi || initialDraft?.jenisPadi || 'sawah');
+  const [metode, setMetode] = useState<MetodeRekomendasi>(initialMetode || initialDraft?.metode || 'puts');
+  const [mode, setMode] = useState<'kualitatif' | 'kuantitatif'>(initialDraft?.mode || 'kualitatif');
   
   // Status Hara State
-  const [pStatus, setPStatus] = useState<HaraStatus>(initialPStatus || 'Rendah');
-  const [kStatus, setKStatus] = useState<HaraStatus>(initialKStatus || 'Tinggi');
+  const [pStatus, setPStatus] = useState<HaraStatus>(initialPStatus || initialDraft?.pStatus || 'Rendah');
+  const [kStatus, setKStatus] = useState<HaraStatus>(initialKStatus || initialDraft?.kStatus || 'Tinggi');
   
   // Nilai Kuantitatif Laboratorium
-  const [p2o5Val, setP2o5Val] = useState<string>('');
-  const [k2oVal, setK2oVal] = useState<string>('');
+  const [p2o5Val, setP2o5Val] = useState<string>(initialDraft?.p2o5Val || '');
+  const [k2oVal, setK2oVal] = useState<string>(initialDraft?.k2oVal || '');
 
   // Luas Petak Sawah (Hektar)
-  const [luasPetak, setLuasPetak] = useState<string>('1');
+  const [luasPetak, setLuasPetak] = useState<string>(initialDraft?.luasPetak || '1');
 
   // Target Dosis Urea Dasar (Padi Sawah)
-  const [targetUrea, setTargetUrea] = useState<number>(initialTargetUrea || 250);
+  const [targetUrea, setTargetUrea] = useState<number>(initialTargetUrea || initialDraft?.targetUrea || 250);
 
   // Koreksi Jerami (Hanya Sawah)
-  const [hasStrawRecycled, setHasStrawRecycled] = useState<boolean>(false);
+  const [hasStrawRecycled, setHasStrawRecycled] = useState<boolean>(initialDraft?.hasStrawRecycled ?? false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+
+  // Auto-Save Draft: Simpan otomatis setiap ada perubahan isian kalkulator
+  useEffect(() => {
+    saveCalculatorDraft({
+      surveyorName,
+      notes,
+      jenisPadi,
+      metode,
+      mode,
+      pStatus,
+      kStatus,
+      p2o5Val,
+      k2oVal,
+      luasPetak,
+      targetUrea,
+      hasStrawRecycled,
+    });
+  }, [
+    surveyorName,
+    notes,
+    jenisPadi,
+    metode,
+    mode,
+    pStatus,
+    kStatus,
+    p2o5Val,
+    k2oVal,
+    luasPetak,
+    targetUrea,
+    hasStrawRecycled,
+  ]);
 
   // Update initial props jika berubah
   useEffect(() => {

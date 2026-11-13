@@ -121,6 +121,14 @@ export const SurveyExportModal: React.FC<SurveyExportModalProps> = ({
                 </div>
               )}
 
+              {/* Pengingat Status Titik Lokal */}
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl flex items-center gap-2.5 text-xs text-amber-900 dark:text-amber-200">
+                <span className="text-base shrink-0">💡</span>
+                <p className="font-semibold text-[11px] leading-snug">
+                  Anda memiliki <strong>{points.length}</strong> titik survei lokal. Jangan lupa kirimkan data setelah selesai bertugas.
+                </p>
+              </div>
+
               {/* ======================================================== */}
               {/* PILIHAN 1: PENGIRIMAN DATA LEWAT WEBHOOK GOOGLE SHEET */}
               {/* ======================================================== */}

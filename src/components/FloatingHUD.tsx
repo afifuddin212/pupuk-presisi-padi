@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Compass, 
   MapPin, 
@@ -54,6 +54,14 @@ export const FloatingHUD: React.FC<FloatingHUDProps> = ({
   onZoomOut,
   totalSurveyPoints,
 }) => {
+  const [showSurveyReminder, setShowSurveyReminder] = useState<boolean>(true);
+
+  // Jika ada titik baru ditambahkan, tampilkan kembali banner pengingat
+  useEffect(() => {
+    if (totalSurveyPoints > 0) {
+      setShowSurveyReminder(true);
+    }
+  }, [totalSurveyPoints]);
   return (
     <div className="fixed inset-0 pointer-events-none z-30 flex flex-col justify-between p-3 select-none">
       {/* 1. TOP HEADER & TELEMETRY */}
@@ -149,6 +157,33 @@ export const FloatingHUD: React.FC<FloatingHUDProps> = ({
             <span>Lokasi Saya</span>
           </button>
         </div>
+
+        {/* Banner Pengingat Titik Survei Lokal Belum Dikirim */}
+        {totalSurveyPoints > 0 && showSurveyReminder && (
+          <div 
+            onClick={onOpenExport}
+            className="w-full pointer-events-auto bg-amber-500/95 dark:bg-amber-600/95 text-white backdrop-blur-md rounded-2xl px-3.5 py-2.5 shadow-lg border border-amber-300/40 flex items-center justify-between text-xs cursor-pointer hover:bg-amber-600 transition animate-fadeIn"
+            title="Klik untuk membuka jendela kirim &amp; rekap data"
+          >
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <span className="text-base shrink-0">💡</span>
+              <span className="text-[11px] font-semibold leading-tight">
+                Anda memiliki <strong>{totalSurveyPoints}</strong> titik survei lokal. Jangan lupa kirimkan data setelah selesai bertugas.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSurveyReminder(false);
+              }}
+              className="w-6 h-6 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/20 transition shrink-0 ml-1.5"
+              title="Sembunyikan Pengingat Sementara"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 2. BOTTOM AREA: THUMB ZONE & CONTROLS */}

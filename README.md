@@ -14,9 +14,11 @@ Aplikasi ini dikembangkan mengacu pada standar resmi **Peraturan Menteri Pertani
 ## 📌 Tautan & Dokumen Acuan Resmi
 * **Live Demo Aplikasi (GitHub Pages)**: [https://afifuddin212.github.io/pupuk-presisi-padi/](https://afifuddin212.github.io/pupuk-presisi-padi/)
 * **Repositori GitHub**: [https://github.com/afifuddin212/pupuk-presisi-padi](https://github.com/afifuddin212/pupuk-presisi-padi)
+* **Dokumen Master Arsitektur**: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 * **Dokumen Acuan Terpadu**: [rekomendasi_pemupukan_presisi_padi_terpadu.md](rekomendasi_pemupukan_presisi_padi_terpadu.md)
 * **Tabel Baku Per-Kecamatan**: [rekomendasi-pemupukan-kecamatan-permentan13_2022.md](rekomendasi-pemupukan-kecamatan-permentan13_2022.md)
 * **Legenda Kesesuaian Lahan**: [public/base-data/LEGENDA_KESESUAIAN_LAHAN.md](public/base-data/LEGENDA_KESESUAIAN_LAHAN.md)
+* **Google Spreadsheet Target Peneliti**: [Data Survei Lapangan Google Sheets](https://docs.google.com/spreadsheets/d/1NLCFggTT1XY1E9nhhzvrR8n77RyQw3aPhG2ICpj2vn4/edit?usp=sharing)
 
 ---
 
@@ -49,16 +51,21 @@ Selain itu, aplikasi dilengkapi **Legenda Mengambang Dinamis (*Floating Mini-Leg
 - **Tabel Perbandingan Langsung (*Bandingkan Semua*)**: Menampilkan matriks komparasi 4 metode dalam satu tampilan ringkas.
 
 ### 3. Kalkulator Pemupukan Presisi Multi-Metode
+- **Perekaman Titik Survei di Paling Atas**: Kotak perekaman nama surveyor, titik koordinat, dan kecamatan diletakkan di posisi paling atas antarmuka agar tidak terlewat sebelum kalkulasi dilakukan.
+- **Deteksi Kecamatan Otomatis**: Nama kecamatan terisi otomatis secara *real-time* berdasarkan titik GPS perangkat atau ketukan bidang sawah di peta (*reverse Point-in-Polygon*).
 - **Pilihan Komoditas / Lahan**: Padi Sawah (Irigasi/Basah) vs Padi Gogo (Kering Masam).
-- **Pilihan Metode**: Permentan 13/2022, PUTS, PUTK.
+- **Pilihan Metode**: Permentan 13/2022 (algoritma status hara tanah P & K), PUTS (uji sawah), PUTK (tanah kering masam).
 - **Wajib SP-36 Tambahan pada Padi Gogo (Paket Majemuk)**:
   - Tanah kering masam memiliki tingkat fiksasi fosfat yang sangat tinggi oleh ion Al³⁺ dan Fe³⁺, sedangkan pupuk subsidi NPK 15-10-12 hanya mengandung 10% fosfat.
   - Sistem menampilkan kotak dosis output: **SP-36 Tambahan** dengan keterangan yang tegas:  
     *"Petani harus memberikan SP-36 Tambahan: [X] kg untuk menutup defisit fosfat tanah masam."*
-- **Kalkulasi Luas Petak Bebas (Hektar)**: Menghasilkan output kebutuhan riil petak petani ($\text{kg}$) dan dosis baku per hektar ($\text{kg/ha}$).
+- **Auto-Save Draft Formulir**: Menjamin isian yang sedang diketik (nama, luas petak, status hara, catatan) tidak hilang saat keluar dari peramban atau layar HP terkunci melalui sinkronisasi lokal instan.
+- **Kalkulasi Luas Petak Bebas (Hektar)**: Menghasilkan output kebutuhan riil petak petani ($\text{kg}$) dan dosis baku per hektar ($\text{kg/ha}$) serta opsi penghematan kalium via Daur Ulang Jerami.
 
-### 4. Perekaman Titik Survei & 2 Pilihan Pengiriman Data
-- **Penyimpanan Lokal Persisten (IndexedDB)**: Bekerja 100% offline di tengah pematang sawah tanpa sinyal seluler.
+### 4. Perekaman Titik Survei, Perlindungan Anti-Purge & Ekspor Data
+- **Penyimpanan Lokal Persisten (IndexedDB + Storage Persistence API)**: Bekerja 100% offline di tengah sawah tanpa sinyal seluler. Dilengkapi izin `navigator.storage.persist()` agar data kebal dari pembersihan otomatis sistem operasi Android saat memori HP penuh.
+- **Banner Pengingat Sinkronisasi**: Mengingatkan pengguna secara berkala melalui banner interaktif:  
+  *💡 "Anda memiliki [X] titik survei lokal. Jangan lupa kirimkan data setelah selesai bertugas."*
 - **2 Pilihan Pengelolaan & Ekspor Data Lapangan**:
   1. **Pengiriman Data lewat WebHook Google Sheets**: Sinkronisasi instan satu ketukan langsung ke spreadsheet tim peneliti menggunakan Webhook Google Apps Script.
   2. **Download Data secara Lokal (Manajemen Folder Otomatis)**: 

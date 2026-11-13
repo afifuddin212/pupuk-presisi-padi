@@ -15,7 +15,8 @@ import {
   deleteSurveyPoint, 
   clearAllSurveyPoints,
   getLastSurveyorName,
-  saveLastSurveyorName
+  saveLastSurveyorName,
+  ensurePersistentStorage
 } from './utils/storageUtils';
 import { getAllKecamatanList, findKecamatanByPoint } from './utils/spatialUtils';
 
@@ -163,6 +164,7 @@ export function App() {
       })
       .catch((err) => console.error('Gagal memuat Batas Administrasi:', err));
 
+    ensurePersistentStorage();
     getAllSurveyPoints().then((pts) => setSurveyPoints(pts));
     getLastSurveyorName().then((name) => setLastSurveyor(name));
 
