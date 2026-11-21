@@ -32,11 +32,10 @@ export function App() {
   const [kesesuaianData, setKesesuaianData] = useState<any>(null);
   const [lbsData, setLbsData] = useState<any>(null);
   const [sptData, setSptData] = useState<any>(null);
-  const [subTypeKesesuaian, setSubTypeKesesuaian] = useState<'KSI' | 'KSH' | 'KPG'>('KSI');
   const [loadingLayerId, setLoadingLayerId] = useState<string | null>(null);
 
   const [allKecamatanList, setAllKecamatanList] = useState<string[]>([]);
-  const [detectedKecamatan, setDetectedKecamatan] = useState<string>('BUKIT KEMUNING');
+  const [detectedKecamatan, setDetectedKecamatan] = useState<string>('');
   const [activeBasemap, setActiveBasemap] = useState<'osm' | 'satellite'>('osm');
   const [centerTrigger, setCenterTrigger] = useState<number>(0);
 
@@ -67,10 +66,17 @@ export function App() {
     metode?: MetodeRekomendasi;
     pStatus?: HaraStatus;
     kStatus?: HaraStatus;
-    targetUrea?: number;
   }>({});
 
   // Daftar Layer Spasial & Simbologi Outdoor High-Contrast
+  const kesesuaianLegend = [
+    { label: 'S1 (Sangat Sesuai)', color: '#15803d' },
+    { label: 'S2 (Cukup Sesuai)', color: '#65a30d' },
+    { label: 'S3 (Sesuai Marginal)', color: '#d97706' },
+    { label: 'N (Tidak Sesuai)', color: '#dc2626' },
+    { label: 'Tidak Dinilai (Abu-abu Bergaris)', color: '#64748b' },
+  ];
+
   const [layers, setLayers] = useState<LayerItem[]>([
     {
       id: 'batas_desa',
@@ -92,19 +98,31 @@ export function App() {
       ],
     },
     {
-      id: 'kesesuaian',
-      name: 'Peta Kesesuaian Lahan Padi (BBSDLP)',
+      id: 'kesesuaian_gogo',
+      name: 'Peta Kesesuaian Lahan - Padi Gogo',
+      active: false,
+      available: true,
+      filename: 'kesesuaian-lahan-lampura.geojson',
+      subType: 'KPG',
+      legend: kesesuaianLegend,
+    },
+    {
+      id: 'kesesuaian_irigasi',
+      name: 'Peta Kesesuaian Lahan - Padi Irigasi',
       active: false,
       available: true,
       filename: 'kesesuaian-lahan-lampura.geojson',
       subType: 'KSI',
-      legend: [
-        { label: 'S1 (Sangat Sesuai)', color: '#15803d' },
-        { label: 'S2 (Cukup Sesuai)', color: '#65a30d' },
-        { label: 'S3 (Sesuai Marginal)', color: '#d97706' },
-        { label: 'N (Tidak Sesuai)', color: '#dc2626' },
-        { label: 'Tidak Dinilai (Abu-abu Bergaris)', color: '#64748b' },
-      ],
+      legend: kesesuaianLegend,
+    },
+    {
+      id: 'kesesuaian_tadah_hujan',
+      name: 'Peta Kesesuaian Lahan - Padi Tadah Hujan',
+      active: false,
+      available: true,
+      filename: 'kesesuaian-lahan-lampura.geojson',
+      subType: 'KSH',
+      legend: kesesuaianLegend,
     },
     {
       id: 'lbs',
@@ -238,8 +256,8 @@ export function App() {
 
     // Muat data saat pertama kali diaktifkan jika belum ada di memori
     if (nextActive) {
-      if (id === 'kesesuaian' && !kesesuaianData) {
-        setLoadingLayerId('kesesuaian');
+      if (id.startsWith('kesesuaian_') && !kesesuaianData) {
+        setLoadingLayerId(id);
         fetch('./base-data/kesesuaian-lahan-lampura.geojson')
           .then((r) => r.json())
           .then((data) => {
@@ -377,7 +395,6 @@ export function App() {
         geoJsonData={geoJsonData}
         adminBoundariesData={adminBoundariesData}
         kesesuaianData={kesesuaianData}
-        subTypeKesesuaian={subTypeKesesuaian}
         lbsData={lbsData}
         sptData={sptData}
         activeBasemap={activeBasemap}
@@ -400,7 +417,6 @@ export function App() {
       {/* 2. Floating Mini Legend untuk Layer Tematik Aktif */}
       <FloatingMiniLegend
         layers={layers}
-        subTypeKesesuaian={subTypeKesesuaian}
         isDarkMode={isDarkMode}
         onOpenLayers={() => setIsLayersOpen(true)}
       />
@@ -431,14 +447,13 @@ export function App() {
         info={selectedPolygonInfo}
         activeLayers={layers}
         onClose={() => setSelectedPolygonInfo(null)}
-        onOpenCalculatorForKecamatan={(kec, pStatus, kStatus, ureaDasar, jenisPadi, metode) => {
+        onOpenCalculatorForKecamatan={(kec, pStatus, kStatus, jenisPadi, metode) => {
           setDetectedKecamatan(kec);
           setCalculatorPrefill({
             jenisPadi,
             metode,
             pStatus,
             kStatus,
-            targetUrea: ureaDasar,
           });
           setIsCalculatorOpen(true);
         }}
@@ -452,8 +467,6 @@ export function App() {
         onToggleLayer={handleToggleLayer}
         activeBasemap={activeBasemap}
         onChangeBasemap={(bm) => setActiveBasemap(bm)}
-        subTypeKesesuaian={subTypeKesesuaian}
-        onChangeSubTypeKesesuaian={(sub) => setSubTypeKesesuaian(sub)}
         loadingLayerId={loadingLayerId}
       />
 
@@ -473,7 +486,6 @@ export function App() {
         initialMetode={calculatorPrefill.metode}
         initialPStatus={calculatorPrefill.pStatus}
         initialKStatus={calculatorPrefill.kStatus}
-        initialTargetUrea={calculatorPrefill.targetUrea}
         onSavePoint={handleSaveSurveyPoint}
         onOpenHelp={() => setIsHelpOpen(true)}
         onRequestManualPick={() => {

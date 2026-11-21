@@ -1,63 +1,130 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <!-- Background Gradient -->
+    <!-- Gradien Latar Belakang Hijau -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#22c55e" />
-      <stop offset="60%" stop-color="#16a34a" />
-      <stop offset="100%" stop-color="#14532d" />
+      <stop offset="0%" stop-color="#1EB954" />
+      <stop offset="100%" stop-color="#0E8A38" />
     </linearGradient>
 
-    <!-- Golden Rice Gradient -->
-    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="50%" y2="100%">
-      <stop offset="0%" stop-color="#fef08a" />
-      <stop offset="50%" stop-color="#facc15" />
-      <stop offset="100%" stop-color="#ca8a04" />
+    <!-- Gradien Bulir Padi Emas -->
+    <linearGradient id="grainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE033" />
+      <stop offset="55%" stop-color="#F7B500" />
+      <stop offset="100%" stop-color="#D98A00" />
     </linearGradient>
 
-    <!-- Pin Shadow & Accent -->
-    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#052e16" flood-opacity="0.4" />
+    <!-- Gradien Tangkai Padi -->
+    <linearGradient id="stemGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#A8DF48" />
+      <stop offset="50%" stop-color="#E7F15C" />
+      <stop offset="100%" stop-color="#F9D43A" />
+    </linearGradient>
+
+    <!-- Gradien Daun Hijau Terang -->
+    <linearGradient id="leafLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A8E635" />
+      <stop offset="100%" stop-color="#5EB824" />
+    </linearGradient>
+
+    <!-- Gradien Daun Hijau Gelap (Bayangan/Lipatan) -->
+    <linearGradient id="leafDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#76C92B" />
+      <stop offset="100%" stop-color="#3A8E1B" />
+    </linearGradient>
+
+    <!-- Bayangan Lembut untuk Pin Lokasi & Elemen -->
+    <filter id="dropShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#064D1E" flood-opacity="0.35" />
+    </filter>
+    <filter id="grainShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#075822" flood-opacity="0.25" />
     </filter>
   </defs>
 
-  <!-- App Icon Squircle Container -->
-  <rect width="512" height="512" rx="115" fill="url(#bgGrad)" />
+  <!-- 1. Latar Belakang Squircle (Ikon Aplikasi) -->
+  <rect x="0" y="0" width="512" height="512" rx="115" ry="115" fill="url(#bgGrad)" />
 
-  <!-- Sawah Field Furrows / Contours in Background -->
-  <path d="M 60 380 Q 256 340 452 400" stroke="#4ade80" stroke-width="8" fill="none" opacity="0.3" stroke-linecap="round"/>
-  <path d="M 40 430 Q 256 390 472 450" stroke="#4ade80" stroke-width="10" fill="none" opacity="0.25" stroke-linecap="round"/>
-
-  <!-- Precision GPS Target Rings (Behind Pin) -->
-  <circle cx="256" cy="270" r="160" stroke="#86efac" stroke-width="4" fill="none" opacity="0.3" stroke-dasharray="12 12" />
-  <circle cx="256" cy="270" r="110" stroke="#bbf7d0" stroke-width="6" fill="none" opacity="0.4" />
-
-  <!-- Stylized Rice Stalks (Bulir Padi Emas) -->
-  <g filter="url(#dropShadow)">
-    <!-- Central Stem -->
-    <path d="M 256 370 C 256 260 256 160 256 90" stroke="#fef08a" stroke-width="8" stroke-linecap="round" />
-
-    <!-- Left Grains -->
-    <ellipse cx="230" cy="140" rx="20" ry="34" transform="rotate(-35 230 140)" fill="url(#goldGrad)" />
-    <ellipse cx="220" cy="200" rx="22" ry="36" transform="rotate(-40 220 200)" fill="url(#goldGrad)" />
-    <ellipse cx="218" cy="265" rx="24" ry="38" transform="rotate(-45 218 265)" fill="url(#goldGrad)" />
-    <ellipse cx="225" cy="325" rx="22" ry="35" transform="rotate(-50 225 325)" fill="url(#goldGrad)" />
-
-    <!-- Right Grains -->
-    <ellipse cx="282" cy="140" rx="20" ry="34" transform="rotate(35 282 140)" fill="url(#goldGrad)" />
-    <ellipse cx="292" cy="200" rx="22" ry="36" transform="rotate(40 292 200)" fill="url(#goldGrad)" />
-    <ellipse cx="294" cy="265" rx="24" ry="38" transform="rotate(45 294 265)" fill="url(#goldGrad)" />
-    <ellipse cx="287" cy="325" rx="22" ry="35" transform="rotate(50 287 325)" fill="url(#goldGrad)" />
-
-    <!-- Top Grain -->
-    <ellipse cx="256" cy="95" rx="18" ry="32" fill="url(#goldGrad)" />
+  <!-- 2. Elemen Dekoratif Radar / Orbit & Garis Lahan Sawah -->
+  <g opacity="0.25">
+    <!-- Lingkaran Putus-putus Luar -->
+    <circle cx="256" cy="256" r="160" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="10 14" stroke-linecap="round" />
+    <!-- Lingkaran Solid Dalam -->
+    <circle cx="256" cy="256" r="112" fill="none" stroke="#FFFFFF" stroke-width="5" />
+    <!-- Garis Kontur Sawah -->
+    <path d="M 55 375 Q 256 345 457 405" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" />
+    <path d="M 35 425 Q 256 390 477 450" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" />
   </g>
 
-  <!-- Precision Location Pin Icon Overlay at Center Bottom -->
+  <!-- 3. Daun Padi Melengkung -->
   <g filter="url(#dropShadow)">
-    <!-- Pin Body -->
-    <path d="M 256 360 C 220 360 196 390 196 418 C 196 455 256 500 256 500 C 256 500 316 455 316 418 C 316 390 292 360 256 360 Z" fill="#ffffff" />
-    <!-- Pin Core Accent -->
-    <circle cx="256" cy="412" r="22" fill="#16a34a" />
-    <circle cx="256" cy="412" r="10" fill="#facc15" />
+    <!-- Daun Kiri Bawah (Menjuntai ke Kiri) -->
+    <path d="M 205 402 C 135 375, 115 315, 75 315 C 62 315, 55 328, 52 342 C 62 326, 78 324, 96 334 C 128 352, 148 395, 205 402 Z" fill="url(#leafLight)" />
+    <path d="M 205 402 C 155 385, 132 345, 96 334 C 122 355, 145 390, 205 402 Z" fill="url(#leafDark)" />
+
+    <!-- Daun Kiri Tegak (Tinggi ke Atas Kiri) -->
+    <path d="M 202 398 C 145 335, 118 245, 138 162 C 122 238, 128 332, 196 402 Z" fill="url(#leafLight)" />
+    <path d="M 202 398 C 158 330, 136 245, 138 162 C 146 242, 168 325, 205 396 Z" fill="url(#leafDark)" />
+
+    <!-- Daun Kanan Melengkung (Membentuk Huruf P / Arch) -->
+    <path d="M 208 395 C 185 310, 215 245, 272 248 C 296 249, 312 264, 318 282 C 306 266, 286 258, 265 262 C 218 270, 202 325, 214 395 Z" fill="url(#leafLight)" />
+    <path d="M 208 395 C 196 320, 222 268, 265 262 C 232 275, 210 325, 214 395 Z" fill="url(#leafDark)" />
+  </g>
+
+  <!-- 4. Tangkai Padi Utama & Cabang Sekunder -->
+  <g stroke="url(#stemGrad)" stroke-linecap="round" fill="none">
+    <!-- Tangkai Utama (Lebih Tebal dan Merunduk Landai ke Kanan) -->
+    <path d="M 206 396 C 175 270, 195 135, 290 105 C 365 82, 412 145, 426 225" stroke-width="6.5" />
+    <!-- Tangkai Cabang (Lebih Kecil di Bagian Dalam Lengkungan) -->
+    <path d="M 192 275 C 195 205, 235 162, 295 168 C 335 172, 355 205, 362 242" stroke-width="4.5" />
+  </g>
+
+  <!-- 5. Bulir-Bulir Padi (Gabah) -->
+  <g filter="url(#grainShadow)" fill="url(#grainGrad)">
+    <!-- === TANGKAI UTAMA (Sisi Luar / Atas) === -->
+    <ellipse cx="212" cy="112" rx="22" ry="12" transform="rotate(-62 212 112)" />
+    <ellipse cx="242" cy="92" rx="23" ry="12.5" transform="rotate(-42 242 92)" />
+    <ellipse cx="280" cy="82" rx="24" ry="13" transform="rotate(-22 280 82)" />
+    <ellipse cx="320" cy="85" rx="24" ry="13" transform="rotate(-2 320 85)" />
+    <ellipse cx="358" cy="100" rx="23" ry="12.5" transform="rotate(20 358 100)" />
+    <ellipse cx="390" cy="126" rx="22" ry="12" transform="rotate(42 390 126)" />
+    <ellipse cx="414" cy="160" rx="21" ry="11.5" transform="rotate(62 414 160)" />
+    <ellipse cx="428" cy="198" rx="20" ry="11" transform="rotate(78 428 198)" />
+
+    <!-- === TANGKAI UTAMA (Sisi Dalam / Bawah) === -->
+    <ellipse cx="236" cy="134" rx="22" ry="12" transform="rotate(-12 236 134)" />
+    <ellipse cx="272" cy="122" rx="23" ry="12.5" transform="rotate(8 272 122)" />
+    <ellipse cx="310" cy="124" rx="23" ry="12.5" transform="rotate(28 310 124)" />
+    <ellipse cx="346" cy="138" rx="22" ry="12" transform="rotate(48 346 138)" />
+    <ellipse cx="376" cy="162" rx="21" ry="11.5" transform="rotate(66 376 162)" />
+    <ellipse cx="398" cy="194" rx="20" ry="11" transform="rotate(82 398 194)" />
+    <!-- Bulir Ujung Tangkai Utama -->
+    <ellipse cx="426" cy="238" rx="21" ry="11" transform="rotate(88 426 238)" />
+
+    <!-- === TANGKAI CABANG (Sisi Atas) === -->
+    <ellipse cx="234" cy="172" rx="16" ry="8.5" transform="rotate(-48 234 172)" />
+    <ellipse cx="258" cy="158" rx="16.5" ry="9" transform="rotate(-26 258 158)" />
+    <ellipse cx="285" cy="154" rx="16.5" ry="9" transform="rotate(-4 285 154)" />
+    <ellipse cx="312" cy="160" rx="16" ry="8.5" transform="rotate(18 312 160)" />
+    <ellipse cx="335" cy="175" rx="15.5" ry="8" transform="rotate(40 335 175)" />
+    <ellipse cx="352" cy="196" rx="15" ry="8" transform="rotate(60 352 196)" />
+
+    <!-- === TANGKAI CABANG (Sisi Bawah) === -->
+    <ellipse cx="250" cy="186" rx="16" ry="8.5" transform="rotate(12 250 186)" />
+    <ellipse cx="276" cy="184" rx="16.5" ry="9" transform="rotate(28 276 184)" />
+    <ellipse cx="302" cy="190" rx="16" ry="8.5" transform="rotate(46 302 190)" />
+    <ellipse cx="324" cy="204" rx="15.5" ry="8" transform="rotate(64 324 204)" />
+    <ellipse cx="340" cy="224" rx="15" ry="7.5" transform="rotate(78 340 224)" />
+    <!-- Bulir Ujung Tangkai Cabang -->
+    <ellipse cx="360" cy="244" rx="15" ry="7.5" transform="rotate(84 360 244)" />
+  </g>
+
+  <!-- 6. Pin Lokasi GPS (Bagian Bawah) -->
+  <g filter="url(#dropShadow)">
+    <!-- Badan Pin Putih -->
+    <path d="M 256 364 C 221 364 194 391 194 425 C 194 464 256 502 256 502 C 256 502 318 464 318 425 C 318 391 291 364 256 364 Z" fill="#FFFFFF" />
+    <!-- Cincin Hijau Tengah -->
+    <circle cx="256" cy="422" r="22" fill="#13A145" />
+    <!-- Titik Kuning Pusat -->
+    <circle cx="256" cy="422" r="10.5" fill="#FBC014" />
   </g>
 </svg>

@@ -85,16 +85,17 @@ button:active, .btn-touch:active {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
-  transform: scale(0.85) !important;
 }
 
 /* Label Poligon Terpilih / Aktif Tetap Tampil Mencolok (Bahkan Saat Zoom-Out) */
+/* Catatan: Jangan gunakan properti 'transform' di sini karena akan menimpa translate3d posisi Leaflet tooltip */
 .kecamatan-map-label.active-label,
 .map-zoom-low .kecamatan-map-label.active-label {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: none !important;
-  transform: scale(1.08) !important;
+  font-size: 11px !important;
+  padding: 3px 9px !important;
   background: #f59e0b !important;
   color: #451a03 !important;
   border: 2px solid #78350f !important;

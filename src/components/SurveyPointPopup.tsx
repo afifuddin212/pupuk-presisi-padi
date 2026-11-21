@@ -74,6 +74,13 @@ export const SurveyPointPopup: React.FC<SurveyPointPopupProps> = ({
                 Metode: {point.metodeRekomendasi ? point.metodeRekomendasi.toUpperCase() : 'PUTS'}
               </span>
             </div>
+            {(point.jenisVarietas || point.alatPanen || point.pengelolaanJerami) && (
+              <div className="col-span-2 grid grid-cols-3 gap-1.5 pt-1.5 border-t border-slate-200 dark:border-slate-700 text-[10px] text-slate-600 dark:text-slate-400">
+                <div><span className="font-semibold">Varietas:</span> {point.jenisVarietas || '-'}</div>
+                <div><span className="font-semibold">Alat Panen:</span> {point.alatPanen || '-'}</div>
+                <div><span className="font-semibold">Jerami:</span> {point.pengelolaanJerami || '-'}</div>
+              </div>
+            )}
           </div>
 
           {/* Status Hara */}

@@ -2,14 +2,14 @@ import { HaraStatus, JenisPadi, MetodeRekomendasi, RekomendasiResult } from '../
 
 /**
  * Menghitung rekomendasi pemupukan Padi Sawah berdasarkan PUTS & Permentan No. 13 Tahun 2022.
- * Mengacu pada dokumen: rekomendasi_pemupukan_presisi_padi_terpadu.md (Bagian 3 & 4)
+ * Target Urea dasar statis 300 kg/ha sesuai tabel rekomendasi.
  */
 export function hitungRekomendasiPadiSawahPUTS(
   pStatus: HaraStatus,
-  kStatus: HaraStatus,
-  targetUrea: number = 250,
-  hasStrawRecycled: boolean = false
+  kStatus: HaraStatus
 ): RekomendasiResult {
+  const targetUrea = 300; // Statis pada tabel rekomendasi
+
   // 1. Dosis SP-36 (36% P2O5)
   let sp36 = 75;
   if (pStatus === 'Rendah') sp36 = 100;
@@ -19,32 +19,25 @@ export function hitungRekomendasiPadiSawahPUTS(
   // 2. Dosis KCl (60% K2O)
   let kcl = 50;
   if (kStatus === 'Rendah') {
-    kcl = hasStrawRecycled ? 50 : 100;
+    kcl = 100;
   } else {
-    // Sedang & Tinggi
-    kcl = hasStrawRecycled ? 0 : 50;
+    kcl = 50;
   }
 
-  // 3. Dosis Majemuk NPK 15-10-12 + Urea Tambahan
+  // 3. Dosis Majemuk NPK 15-10-12 + Urea Tambahan (berbasis Urea 300 kg/ha)
   let npk = 300;
-  let ureaTambahan = 150;
+  let ureaTambahan = 200;
 
   if (pStatus === 'Rendah') {
     npk = 375;
-    if (targetUrea <= 250) ureaTambahan = 125;
-    else if (targetUrea <= 300) ureaTambahan = 175;
-    else ureaTambahan = 225;
+    ureaTambahan = 175;
   } else if (pStatus === 'Sedang') {
     npk = 300;
-    if (targetUrea <= 250) ureaTambahan = 150;
-    else if (targetUrea <= 300) ureaTambahan = 200;
-    else ureaTambahan = 250;
+    ureaTambahan = 200;
   } else {
     // Tinggi
     npk = 250;
-    if (targetUrea <= 250) ureaTambahan = 175;
-    else if (targetUrea <= 300) ureaTambahan = 225;
-    else ureaTambahan = 275;
+    ureaTambahan = 225;
   }
 
   return {
@@ -53,7 +46,6 @@ export function hitungRekomendasiPadiSawahPUTS(
     pStatus,
     kStatus,
     targetUrea,
-    hasStrawRecycled,
     tunggal: {
       urea: targetUrea,
       sp36,
@@ -69,14 +61,13 @@ export function hitungRekomendasiPadiSawahPUTS(
 
 /**
  * Menghitung rekomendasi pemupukan Padi Gogo / Lahan Kering berdasarkan PUTK / BRMP.
- * Mengacu pada dokumen: rekomendasi_pemupukan_presisi_padi_terpadu.md (Bagian 5)
- * Karena fiksasi fosfat tinggi pada tanah masam, paket majemuk memerlukan SP-36 tambahan.
+ * Karena fiksasi fosfat tinggi pada tanah kering, paket majemuk memerlukan SP-36 tambahan.
  */
 export function hitungRekomendasiPadiGogoPUTK(
   pStatus: HaraStatus,
   kStatus: HaraStatus
 ): RekomendasiResult {
-  const targetUrea = 300; // Baku Padi Gogo
+  const targetUrea = 300; // Statis pada tabel rekomendasi
 
   // 1. Dosis SP-36 Tunggal
   let sp36 = 150;
@@ -126,17 +117,15 @@ export function hitungRekomendasiPadiGogoPUTK(
       ureaTambahan,
       sp36Tambahan,
     },
-    catatanKhusus: sp36Tambahan > 0 
-      ? `Petani harus memberikan SP-36 Tambahan sebesar ${sp36Tambahan} kg/ha untuk menutup defisit fosfat lahan kering masam.` 
-      : undefined,
+    catatanKhusus:
+      sp36Tambahan > 0
+        ? `Petani harus memberikan SP-36 Tambahan sebesar ${sp36Tambahan} kg/ha untuk menutup defisit fosfat lahan kering.`
+        : undefined,
   };
 }
 
 /**
  * Mengambil dosis baku rekomendasi per-kecamatan sesuai Permentan No. 13 Tahun 2022 (Lampiran A).
- * Untuk seluruh 23 kecamatan di Lampung Utara:
- * - Tunggal: Urea 250, SP-36 75, KCl 50 kg/ha
- * - Majemuk: NPK 15-10-12 300 + Urea 150 kg/ha
  */
 export function getRekomendasiBakuKecamatanPermentan(kecamatan: string): RekomendasiResult {
   return {
@@ -161,30 +150,22 @@ export function getRekomendasiBakuKecamatanPermentan(kecamatan: string): Rekomen
 
 /**
  * Menghitung dosis pupuk terpadu sesuai parameter input pengguna.
- * Padi Sawah (Metode 'permentan' maupun 'puts'):
- * Menggunakan algoritma presisi terpadu berdasarkan kombinasi status hara P & K (kualitatif/kuantitatif),
- * target produktivitas urea dasar, dan faktor daur ulang jerami sesuai dokumen:
- * rekomendasi_pemupukan_presisi_padi_terpadu.md (Bukan ketetapan statis baku kecamatan).
  */
 export function hitungRekomendasiPupuk(
   pStatus: HaraStatus,
   kStatus: HaraStatus,
-  targetUrea: number = 250,
   jenisPadi: JenisPadi = 'sawah',
   metode: MetodeRekomendasi = 'puts',
-  hasStrawRecycled: boolean = false,
-  kecamatan: string = 'BUKIT KEMUNING'
+  _kecamatan: string = ''
 ): RekomendasiResult {
   if (jenisPadi === 'gogo' || metode === 'putk') {
     return hitungRekomendasiPadiGogoPUTK(pStatus, kStatus);
   }
 
-  // Padi Sawah (Metode 'permentan' maupun 'puts'):
-  // Menggunakan algoritma matriks terpadu Permentan 13/2022 & PUTS
-  const res = hitungRekomendasiPadiSawahPUTS(pStatus, kStatus, targetUrea, hasStrawRecycled);
+  const res = hitungRekomendasiPadiSawahPUTS(pStatus, kStatus);
   res.metode = metode;
   if (metode === 'permentan') {
-    res.catatanKhusus = `Rekomendasi presisi Padi Sawah berbasis algoritma Permentan 13/2022 (Status P: ${pStatus}, K: ${kStatus}, Target Urea: ${targetUrea} kg/ha).`;
+    res.catatanKhusus = `Rekomendasi presisi Padi Sawah berbasis algoritma Permentan 13/2022 (Status P: ${pStatus}, K: ${kStatus}).`;
   }
   return res;
 }

@@ -4,14 +4,12 @@ import { LayerItem } from '../types';
 
 interface FloatingMiniLegendProps {
   layers: LayerItem[];
-  subTypeKesesuaian?: string;
   isDarkMode?: boolean;
   onOpenLayers?: () => void;
 }
 
 export const FloatingMiniLegend: React.FC<FloatingMiniLegendProps> = ({
   layers,
-  subTypeKesesuaian,
   onOpenLayers,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -91,44 +89,28 @@ export const FloatingMiniLegend: React.FC<FloatingMiniLegendProps> = ({
 
           {/* Daftar Legenda Per Layer Aktif */}
           <div className="space-y-3 overflow-y-auto pr-1 text-[11px] divide-y divide-slate-100 dark:divide-slate-800/80">
-            {activeThematicLayers.map((layer) => {
-              const subTitle =
-                layer.id === 'kesesuaian' && subTypeKesesuaian
-                  ? subTypeKesesuaian === 'KSI'
-                    ? '(Padi Irigasi)'
-                    : subTypeKesesuaian === 'KSTH'
-                    ? '(Padi Tadah Hujan)'
-                    : '(Padi Gogo)'
-                  : null;
-
-              return (
-                <div key={layer.id} className="pt-2 first:pt-0 space-y-1.5">
-                  <div className="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200 text-[10.5px]">
-                    <Layers className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span className="truncate">{layer.name}</span>
-                    {subTitle && (
-                      <span className="text-[9.5px] font-medium text-emerald-600 dark:text-emerald-400 shrink-0">
-                        {subTitle}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-1 pl-1">
-                    {layer.legend?.map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <span
-                          className="w-3 h-3 rounded-full border border-black/25 dark:border-white/20 shrink-0 shadow-2xs"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className="text-[10.5px] text-slate-700 dark:text-slate-300 leading-snug">
-                          {item.label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+            {activeThematicLayers.map((layer) => (
+              <div key={layer.id} className="pt-2 first:pt-0 space-y-1.5">
+                <div className="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200 text-[10.5px]">
+                  <Layers className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="truncate">{layer.name}</span>
                 </div>
-              );
-            })}
+
+                <div className="grid grid-cols-1 gap-1 pl-1">
+                  {layer.legend?.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span
+                        className="w-3 h-3 rounded-full border border-black/25 dark:border-white/20 shrink-0 shadow-2xs"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-[10.5px] text-slate-700 dark:text-slate-300 leading-snug">
+                        {item.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

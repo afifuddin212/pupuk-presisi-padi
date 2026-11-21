@@ -88,6 +88,9 @@ export async function getLastSurveyorName(): Promise<string> {
 export interface CalculatorDraft {
   surveyorName?: string;
   notes?: string;
+  jenisVarietas?: string;
+  alatPanen?: string;
+  pengelolaanJerami?: 'Dibakar' | 'Dibiarkan' | '';
   jenisPadi?: JenisPadi;
   metode?: MetodeRekomendasi;
   mode?: 'kualitatif' | 'kuantitatif';
@@ -96,8 +99,6 @@ export interface CalculatorDraft {
   p2o5Val?: string;
   k2oVal?: string;
   luasPetak?: string;
-  targetUrea?: number;
-  hasStrawRecycled?: boolean;
 }
 
 const DRAFT_KEY = 'pupuk_presisi_calc_draft';

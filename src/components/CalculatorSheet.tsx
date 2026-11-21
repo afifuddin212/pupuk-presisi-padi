@@ -35,7 +35,6 @@ interface CalculatorSheetProps {
   initialMetode?: MetodeRekomendasi;
   initialPStatus?: HaraStatus;
   initialKStatus?: HaraStatus;
-  initialTargetUrea?: number;
   onSavePoint: (point: Omit<SurveyPoint, 'id' | 'timestamp'>) => void;
   onOpenHelp: () => void;
   onRequestManualPick: () => void;
@@ -57,7 +56,6 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
   initialMetode,
   initialPStatus,
   initialKStatus,
-  initialTargetUrea,
   onSavePoint,
   onOpenHelp,
   onRequestManualPick,
@@ -69,7 +67,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
   // Perekaman Titik Survei State (Paling Atas)
   const [surveyorName, setSurveyorName] = useState<string>(lastSurveyor || initialDraft?.surveyorName || '');
   const [useCurrentGps, setUseCurrentGps] = useState<boolean>(true);
-  const [selectedKecamatan, setSelectedKecamatan] = useState<string>(detectedKecamatan || 'BUKIT KEMUNING');
+  const [selectedKecamatan, setSelectedKecamatan] = useState<string>(detectedKecamatan || '');
   const [isAutoDetected, setIsAutoDetected] = useState<boolean>(true);
   const [notes, setNotes] = useState<string>(initialDraft?.notes || '');
 
@@ -89,11 +87,12 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
   // Luas Petak Sawah (Hektar)
   const [luasPetak, setLuasPetak] = useState<string>(initialDraft?.luasPetak || '1');
 
-  // Target Dosis Urea Dasar (Padi Sawah)
-  const [targetUrea, setTargetUrea] = useState<number>(initialTargetUrea || initialDraft?.targetUrea || 250);
-
-  // Koreksi Jerami (Hanya Sawah)
-  const [hasStrawRecycled, setHasStrawRecycled] = useState<boolean>(initialDraft?.hasStrawRecycled ?? false);
+  // Input Opsional (Tidak memengaruhi perhitungan dosis)
+  const [jenisVarietas, setJenisVarietas] = useState<string>(initialDraft?.jenisVarietas || '');
+  const [alatPanen, setAlatPanen] = useState<string>(initialDraft?.alatPanen || '');
+  const [pengelolaanJerami, setPengelolaanJerami] = useState<'Dibakar' | 'Dibiarkan' | ''>(
+    initialDraft?.pengelolaanJerami || ''
+  );
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
 
   // Auto-Save Draft: Simpan otomatis setiap ada perubahan isian kalkulator
@@ -101,6 +100,9 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
     saveCalculatorDraft({
       surveyorName,
       notes,
+      jenisVarietas,
+      alatPanen,
+      pengelolaanJerami,
       jenisPadi,
       metode,
       mode,
@@ -109,12 +111,13 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
       p2o5Val,
       k2oVal,
       luasPetak,
-      targetUrea,
-      hasStrawRecycled,
     });
   }, [
     surveyorName,
     notes,
+    jenisVarietas,
+    alatPanen,
+    pengelolaanJerami,
     jenisPadi,
     metode,
     mode,
@@ -123,8 +126,6 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
     p2o5Val,
     k2oVal,
     luasPetak,
-    targetUrea,
-    hasStrawRecycled,
   ]);
 
   // Update initial props jika berubah
@@ -133,8 +134,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
     if (initialMetode) setMetode(initialMetode);
     if (initialPStatus) setPStatus(initialPStatus);
     if (initialKStatus) setKStatus(initialKStatus);
-    if (initialTargetUrea) setTargetUrea(initialTargetUrea);
-  }, [initialJenisPadi, initialMetode, initialPStatus, initialKStatus, initialTargetUrea]);
+  }, [initialJenisPadi, initialMetode, initialPStatus, initialKStatus]);
 
   // Update lastSurveyor jika ada
   useEffect(() => {
@@ -170,7 +170,6 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
     setJenisPadi(val);
     if (val === 'gogo') {
       setMetode('putk');
-      setTargetUrea(300);
     } else {
       // Sawah
       if (metode === 'putk') {
@@ -200,10 +199,8 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
   const hasil = hitungRekomendasiPupuk(
     pStatus,
     kStatus,
-    targetUrea,
     jenisPadi,
     metode,
-    hasStrawRecycled,
     selectedKecamatan
   );
 
@@ -234,8 +231,10 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
       kStatus,
       p2o5Kuantitatif: p2o5Val ? parseFloat(p2o5Val) : undefined,
       k2oKuantitatif: k2oVal ? parseFloat(k2oVal) : undefined,
-      targetUrea,
-      hasStrawRecycled,
+      targetUrea: hasil.targetUrea,
+      jenisVarietas: jenisVarietas.trim() || undefined,
+      alatPanen: alatPanen.trim() || undefined,
+      pengelolaanJerami: pengelolaanJerami || undefined,
       tunggal: hasil.tunggal,
       majemuk: hasil.majemuk,
       notes,
@@ -434,7 +433,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                 }`}
               >
                 <span>Padi Sawah</span>
-                <span className="text-[9.5px] opacity-85 font-normal">(Lahan Basah / Irigasi)</span>
+                <span className="text-[9.5px] opacity-85 font-normal">(Lahan Basah)</span>
               </button>
               <button
                 type="button"
@@ -446,7 +445,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                 }`}
               >
                 <span>Padi Gogo</span>
-                <span className="text-[9.5px] opacity-85 font-normal">(Lahan Kering Masam)</span>
+                <span className="text-[9.5px] opacity-85 font-normal">(Lahan Kering)</span>
               </button>
             </div>
           </div>
@@ -496,7 +495,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                   </span>
                 </div>
                 <p className="text-[10.5px] text-amber-800 dark:text-amber-300">
-                  Untuk lahan kering masam, kebutuhan fosfat dihitung hingga 2x lipat dan paket pupuk majemuk menyertakan tambahan SP-36.
+                  Untuk lahan kering, kebutuhan fosfat dihitung hingga 2x lipat dan paket pupuk majemuk menyertakan tambahan SP-36.
                 </p>
               </div>
             )}
@@ -691,54 +690,66 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
           </div>
 
           {/* ======================================================== */}
-          {/* 6. TARGET HASIL UREA & FAKTOR JERAMI (KHUSUS PADI SAWAH) */}
+          {/* 6. INFORMASI TAMBAHAN LAHAN (OPSIONAL)                   */}
           {/* ======================================================== */}
-          {jenisPadi === 'sawah' && (
-            <div className="space-y-3">
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase">
+                Informasi Tambahan Lahan (Opsional):
+              </span>
+              <span className="text-[10px] text-slate-400 italic">Boleh dikosongkan</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
-                  Target Dosis Urea Dasar (Target Panen):
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  Jenis Varietas:
                 </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[250, 300, 350].map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setTargetUrea(val)}
-                      className={`p-2 rounded-xl border text-center transition flex flex-col items-center justify-center ${
-                        targetUrea === val
-                          ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 font-bold ring-2 ring-emerald-500/30'
-                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      <span className="text-xs">{val} kg/ha</span>
-                      <span className="text-[9.5px] text-slate-500">
-                        {val === 250 ? '< 5 ton/ha' : val === 300 ? '5-6 ton/ha' : '> 6 ton/ha'}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                <input
+                  type="text"
+                  placeholder="Contoh: Inpari 32, Ciherang"
+                  value={jenisVarietas}
+                  onChange={(e) => setJenisVarietas(e.target.value)}
+                  className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                />
               </div>
 
-              {/* Faktor Jerami */}
-              <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 cursor-pointer">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  Alat Panen:
+                </label>
                 <input
-                  type="checkbox"
-                  checked={hasStrawRecycled}
-                  onChange={(e) => setHasStrawRecycled(e.target.checked)}
-                  className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
+                  type="text"
+                  placeholder="Contoh: Combine Harvester, Sabit"
+                  value={alatPanen}
+                  onChange={(e) => setAlatPanen(e.target.value)}
+                  className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 shadow-xs"
                 />
-                <div className="text-[11px] leading-tight">
-                  <span className="font-bold text-emerald-900 dark:text-emerald-200">
-                    Pengembalian Jerami Padi Sawah (≥ 5 ton/ha)
-                  </span>
-                  <p className="text-slate-600 dark:text-slate-400 text-[10px] mt-0.5">
-                    Daur ulang jerami mencukupi kebutuhan hara Kalium sehingga dosis pupuk KCl dikurangi hingga 0-50 kg/ha.
-                  </p>
-                </div>
-              </label>
+              </div>
             </div>
-          )}
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                Pengelolaan Jerami:
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {(['Dibakar', 'Dibiarkan'] as const).map((opsi) => (
+                  <button
+                    key={opsi}
+                    type="button"
+                    onClick={() => setPengelolaanJerami((prev) => (prev === opsi ? '' : opsi))}
+                    className={`py-2 px-3 rounded-xl border font-bold text-xs transition flex items-center justify-center ${
+                      pengelolaanJerami === opsi
+                        ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/30'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    {opsi}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
           {/* ======================================================== */}
           {/* 7. KOTAK HASIL REKOMENDASI DOSIS */}

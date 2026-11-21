@@ -27,7 +27,6 @@ interface PolygonInfoPopupProps {
     kecamatan: string, 
     pStatus?: HaraStatus, 
     kStatus?: HaraStatus, 
-    ureaDasar?: number,
     jenisPadi?: JenisPadi,
     metode?: MetodeRekomendasi
   ) => void;
@@ -123,13 +122,13 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
     p: pPadi,
     k: kPadi,
     tunggal: {
-      urea: 250,
+      urea: 300,
       sp36: pPadi === 'Rendah' ? 100 : pPadi === 'Sedang' ? 75 : 50,
       kcl: kPadi === 'Rendah' ? 100 : 50,
     },
     majemuk: {
       npk: pPadi === 'Rendah' ? 375 : pPadi === 'Sedang' ? 300 : 250,
-      urea: pPadi === 'Rendah' ? 125 : pPadi === 'Sedang' ? 150 : 175,
+      urea: pPadi === 'Rendah' ? 175 : pPadi === 'Sedang' ? 200 : 225,
       sp36Tambahan: 0,
     },
     title: 'PUTS (Padi Sawah)',
@@ -153,9 +152,9 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
       sp36Tambahan: pPadi === 'Rendah' ? 75 : pPadi === 'Sedang' ? 50 : 0,
     },
     title: 'PUTK (Padi Gogo)',
-    subtitle: 'Formula Padi Lahan Kering Masam',
+    subtitle: 'Formula Padi Lahan Kering',
     badge: 'Defisit Fosfat Tinggi',
-    keterangan: 'Formula lahan kering masam dengan tambahan SP-36 untuk menutup defisit fosfat.',
+    keterangan: 'Formula lahan kering dengan tambahan SP-36 untuk menutup defisit fosfat.',
   };
 
   const currentItem = 
@@ -166,27 +165,22 @@ export const PolygonInfoPopup: React.FC<PolygonInfoPopupProps> = ({
   const handleOpenCalculator = () => {
     let jenisPadi: JenisPadi = 'sawah';
     let metode: MetodeRekomendasi = 'puts';
-    let targetUrea = currentItem.tunggal.urea;
 
     if (activeTab === 'putk') {
       jenisPadi = 'gogo';
       metode = 'putk';
-      targetUrea = 300;
     } else if (activeTab === 'permentan') {
       jenisPadi = 'sawah';
       metode = 'permentan';
-      targetUrea = 250;
     } else if (activeTab === 'puts') {
       jenisPadi = 'sawah';
       metode = 'puts';
-      targetUrea = 250;
     }
 
     onOpenCalculatorForKecamatan(
       kecName,
       currentItem.p,
       currentItem.k,
-      targetUrea,
       jenisPadi,
       metode
     );

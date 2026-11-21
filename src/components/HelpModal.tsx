@@ -46,7 +46,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 Pusat Bantuan &amp; Panduan
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Pupuk Presisi Padi Lampung Utara &bull; Permentan 13/2022
+                Pupuk Pas Padi Lampung Utara &bull; Permentan 13/2022
               </p>
             </div>
           </div>
@@ -153,15 +153,15 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-lime-500 shrink-0" />
                     <h5 className="font-bold text-slate-900 dark:text-white text-xs">
-                      2. Peta Kesesuaian Lahan Padi (BBSDLP)
+                      2. Peta Kesesuaian Lahan Padi (3 Layer Terpisah)
                     </h5>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-4.5">
-                    Mengevaluasi kelayakan biofisik tanah untuk 3 sub-komoditas: <strong>Padi Irigasi</strong>, <strong>Padi Tadah Hujan</strong>, dan <strong>Padi Gogo</strong>.
+                    Tersedia sebagai 3 layer terpisah yang dapat dipilih sendiri-sendiri: <strong>Padi Gogo</strong>, <strong>Padi Irigasi</strong>, dan <strong>Padi Tadah Hujan</strong>.
                     <br />
                     • <strong>Kelas Simbologi</strong>: S1 (Sangat Sesuai - Hijau Tua), S2 (Cukup Sesuai - Hijau Muda), S3 (Sesuai Marginal - Emas), N (Tidak Sesuai - Merah), dan Tidak Dinilai (Abu-abu Slate bertekstur, bukan area sawah).
                     <br />
-                    • <strong>Faktor Pembatas</strong>: Menampilkan kendala biofisik spesifik (suhu <em>tc</em>, ketersediaan air <em>wa</em>, drainase/aerasi <em>oa</em>, perakaran <em>rc</em>, retensi hara/pH masam <em>nr</em>, toksisitas <em>xc</em>, erosi <em>eh</em>, bahaya banjir <em>fh</em>).
+                    • <strong>Faktor Pembatas</strong>: Menampilkan kendala biofisik spesifik (suhu <em>tc</em>, ketersediaan air <em>wa</em>, drainase/aerasi <em>oa</em>, perakaran <em>rc</em>, retensi hara <em>nr</em>, toksisitas <em>xc</em>, erosi <em>eh</em>, bahaya banjir <em>fh</em>).
                   </p>
                 </div>
 
@@ -387,7 +387,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     Landasan Regulasi &amp; Pustaka:
                   </h4>
                   <p className="text-[11px] text-purple-900 dark:text-purple-300">
-                    Mengacu pada <strong>Permentan No. 13 Tahun 2022</strong> dipadukan dengan pedoman teknis Balitbangtan/BBSDLP untuk <strong>PUTS (Uji Sawah)</strong> dan <strong>PUTK / BRMP (Uji Tanah Kering Masam)</strong>.
+                    Mengacu pada <strong>Permentan No. 13 Tahun 2022</strong> dipadukan dengan pedoman teknis Balitbangtan/BBSDLP untuk <strong>PUTS (Uji Sawah)</strong> dan <strong>PUTK / BRMP (Uji Tanah Kering)</strong>.
                   </p>
                 </div>
               </div>
@@ -433,10 +433,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   2. Formula Rekomendasi Padi Sawah (PUTS &amp; Permentan 13/2022)
                 </h5>
                 <ul className="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-300 text-[11px]">
-                  <li><strong>Target Urea Dasar</strong>: 250 kg/ha (&lt;5 ton), 300 kg/ha (5-6 ton), atau 350 kg/ha (&gt;6 ton).</li>
+                  <li><strong>Urea Dasar</strong>: 300 kg/ha (statis pada tabel rekomendasi PUTS).</li>
                   <li><strong>SP-36</strong>: Rendah = 100 kg/ha | Sedang = 75 kg/ha | Tinggi = 50 kg/ha.</li>
                   <li><strong>KCl</strong>: Rendah = 100 kg/ha | Sedang &amp; Tinggi = 50 kg/ha.</li>
-                  <li><strong>Koreksi Jerami</strong>: Pengembalian jerami segar ≥ 5 ton/ha menurunkan kebutuhan KCl menjadi 0–50 kg/ha.</li>
                   <li><strong>Paket Majemuk Resmi</strong>: Substitusi NPK 15-10-12 (250–375 kg/ha) ditambah Urea penutup defisit nitrogen.</li>
                 </ul>
               </div>
@@ -448,11 +447,11 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   3. Formula Khusus Padi Gogo / Lahan Kering (PUTK / BRMP)
                 </h5>
                 <p className="text-[11px] text-amber-900 dark:text-amber-300">
-                  Pada tanah kering masam (Ultisol/Podsolik), terjadi fiksasi fosfat yang sangat tinggi oleh ion Al³⁺ dan Fe³⁺. Oleh karena itu:
+                  Pada tanah lahan kering (Ultisol/Podsolik), terjadi fiksasi fosfat yang sangat tinggi oleh ion Al³⁺ dan Fe³⁺. Oleh karena itu:
                 </p>
                 <ul className="list-disc pl-4 space-y-0.5 text-[11px] text-amber-900 dark:text-amber-300">
                   <li>Kebutuhan pupuk Fosfat (SP-36) mencapai <strong>2 kali lipat</strong> (100–200 kg/ha).</li>
-                  <li>Target Urea dasar baku ditetapkan <strong>300 kg/ha</strong>.</li>
+                  <li>Urea dasar baku ditetapkan <strong>300 kg/ha</strong>.</li>
                   <li><strong>Wajib SP-36 Tambahan</strong>: Pupuk subsidi NPK 15-10-12 hanya memiliki 10% fosfat, sehingga petani <strong>harus memberikan SP-36 Tambahan (50–75 kg/ha)</strong> pada paket majemuk agar kebutuhan hara fosfat tanaman tercukupi.</li>
                 </ul>
               </div>
@@ -481,6 +480,30 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           )}
+
+          {/* ============================================================ */}
+          {/* BAGIAN KONTAK (TAMPIL DI PUSAT BANTUAN)                      */}
+          {/* ============================================================ */}
+          <div className="p-3.5 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/70 space-y-1.5">
+            <h5 className="font-bold text-emerald-950 dark:text-emerald-200 text-xs flex items-center gap-1.5">
+              <Info className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Kontak</span>
+            </h5>
+            <div className="text-[11px] text-slate-700 dark:text-slate-300 space-y-0.5 pl-5.5">
+              <p>
+                <span className="font-semibold">Nama:</span> Erpina Delina, S.P., M.Agr.
+              </p>
+              <p>
+                <span className="font-semibold">Email:</span>{' '}
+                <a
+                  href="mailto:smartabungsemuli@gmail.com"
+                  className="text-emerald-700 dark:text-emerald-400 font-bold underline hover:text-emerald-800"
+                >
+                  smartabungsemuli@gmail.com
+                </a>
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Footer Modal */}

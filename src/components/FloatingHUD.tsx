@@ -84,8 +84,8 @@ export const FloatingHUD: React.FC<FloatingHUDProps> = ({
 
             {/* Judul Aplikasi */}
             <div className="flex flex-col min-w-0 pl-1.5 border-l border-slate-200 dark:border-slate-700">
-              <h1 className="text-[11.5px] sm:text-xs font-black text-slate-900 dark:text-white leading-tight truncate">
-                Rekomendasi Pemupukan Presisi Padi
+              <h1 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight truncate">
+                Pupuk Pas Padi
               </h1>
               <span className="text-[9.5px] font-bold text-emerald-700 dark:text-emerald-400 tracking-wider uppercase truncate">
                 Kabupaten Lampung Utara
@@ -211,10 +211,11 @@ export const FloatingHUD: React.FC<FloatingHUDProps> = ({
           {/* Tombol Kirim Data Survei */}
           <button
             onClick={onOpenExport}
-            className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-blue-600 text-white shadow-xl flex items-center justify-center hover:bg-blue-700 border-2 border-white/50 dark:border-slate-800 relative transition"
+            className="w-14 min-w-[56px] min-h-[48px] py-1.5 px-1 rounded-2xl bg-blue-600 text-white shadow-xl flex flex-col items-center justify-center gap-0.5 hover:bg-blue-700 border-2 border-white/50 dark:border-slate-800 relative transition"
             title="Kirim / Rekap Data Survei"
           >
-            <Share2 className="w-5 h-5" />
+            <Share2 className="w-4.5 h-4.5" />
+            <span className="text-[8.5px] font-extrabold leading-none tracking-tight">Kirim Data</span>
             {totalSurveyPoints > 0 && (
               <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow">
                 {totalSurveyPoints}
@@ -225,10 +226,11 @@ export const FloatingHUD: React.FC<FloatingHUDProps> = ({
           {/* Tombol Layer & Legenda */}
           <button
             onClick={onOpenLayers}
-            className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-xl flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition"
+            className="w-14 min-w-[56px] min-h-[48px] py-1.5 px-1 rounded-2xl bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-xl flex flex-col items-center justify-center gap-0.5 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition"
             title="Manajemen Layer & Legenda Peta"
           >
-            <Layers className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <Layers className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-[8.5px] font-extrabold leading-none tracking-tight text-slate-700 dark:text-slate-200">Pilih Peta</span>
           </button>
 
           {/* Primary Action: Buka Kalkulator Pupuk (Mencolok: Warna Emas / Amber-Oranye Terang) */}

@@ -1,0 +1,28 @@
+{
+  "name": "Pupuk Pas Padi",
+  "short_name": "Pupuk Pas Padi",
+  "description": "Aplikasi Rekomendasi Pemupukan Presisi Padi Sawah & Padi Gogo Kabupaten Lampung Utara",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0E8A38",
+  "theme_color": "#0E8A38",
+  "icons": [
+    {
+      "src": "./logo/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./logo/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./logo/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -22,7 +22,6 @@ export interface RekomendasiResult {
   targetUrea: number;
   tunggal: DosisPaketTunggal;
   majemuk: DosisPaketMajemuk;
-  hasStrawRecycled?: boolean;
   catatanKhusus?: string;
 }
 
@@ -52,7 +51,9 @@ export interface SurveyPoint {
   p2o5Kuantitatif?: number;
   k2oKuantitatif?: number;
   targetUrea: number;
-  hasStrawRecycled?: boolean;
+  jenisVarietas?: string;
+  alatPanen?: string;
+  pengelolaanJerami?: 'Dibakar' | 'Dibiarkan' | '';
   tunggal: DosisPaketTunggal;
   majemuk: DosisPaketMajemuk;
   notes?: string;

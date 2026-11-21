@@ -9,8 +9,6 @@ interface LayerManagerSheetProps {
   onToggleLayer: (id: string) => void;
   activeBasemap: 'osm' | 'satellite';
   onChangeBasemap: (type: 'osm' | 'satellite') => void;
-  subTypeKesesuaian?: 'KSI' | 'KSH' | 'KPG';
-  onChangeSubTypeKesesuaian?: (type: 'KSI' | 'KSH' | 'KPG') => void;
   loadingLayerId?: string | null;
 }
 
@@ -21,8 +19,6 @@ export const LayerManagerSheet: React.FC<LayerManagerSheetProps> = ({
   onToggleLayer,
   activeBasemap,
   onChangeBasemap,
-  subTypeKesesuaian = 'KSI',
-  onChangeSubTypeKesesuaian,
   loadingLayerId,
 }) => {
   const [caching, setCaching] = useState(false);
@@ -207,36 +203,6 @@ export const LayerManagerSheet: React.FC<LayerManagerSheetProps> = ({
                         </span>
                       ) : null}
                     </div>
-
-                    {/* Sub-selector khusus layer Kesesuaian Lahan jika aktif */}
-                    {layer.id === 'kesesuaian' && layer.active && onChangeSubTypeKesesuaian && (
-                      <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60">
-                        <div className="text-[10px] font-bold text-slate-500 mb-1.5 flex items-center gap-1">
-                          <Sprout className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Komoditas yang Diwarnai di Peta:</span>
-                        </div>
-                        <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl">
-                          {[
-                            { id: 'KSI', label: 'Padi Irigasi' },
-                            { id: 'KSH', label: 'Tadah Hujan' },
-                            { id: 'KPG', label: 'Padi Gogo' },
-                          ].map((sub) => (
-                            <button
-                              key={sub.id}
-                              type="button"
-                              onClick={() => onChangeSubTypeKesesuaian(sub.id as any)}
-                              className={`py-1 px-1.5 rounded-lg text-[10.5px] font-bold transition ${
-                                subTypeKesesuaian === sub.id
-                                  ? 'bg-emerald-600 text-white shadow-xs'
-                                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                              }`}
-                            >
-                              {sub.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
                     {/* Legenda Dinamis jika Layer Aktif */}
                     {layer.active && layer.legend && layer.legend.length > 0 && (
