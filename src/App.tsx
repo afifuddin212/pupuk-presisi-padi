@@ -405,6 +405,7 @@ export function App() {
         surveyPoints={surveyPoints}
         selectedKecamatan={detectedKecamatan}
         pickedLocation={pickedLocation}
+        inspectLocation={selectedPolygonInfo?.coordinates || null}
         onSelectSurveyPoint={(pt) => setSelectedPoint(pt)}
         onKecamatanDetected={(kec) => setDetectedKecamatan(kec)}
         onPolygonSelect={(info) => setSelectedPolygonInfo(info)}

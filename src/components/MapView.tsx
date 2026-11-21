@@ -19,6 +19,7 @@ interface MapViewProps {
   surveyPoints: SurveyPoint[];
   selectedKecamatan: string;
   pickedLocation: [number, number] | null;
+  inspectLocation?: [number, number] | null;
   onSelectSurveyPoint: (point: SurveyPoint) => void;
   onKecamatanDetected: (kecamatan: string) => void;
   onMapClickCoordinates: (coords: [number, number]) => void;
@@ -42,6 +43,7 @@ export const MapView: React.FC<MapViewProps> = ({
   surveyPoints,
   selectedKecamatan,
   pickedLocation,
+  inspectLocation,
   onSelectSurveyPoint,
   onKecamatanDetected,
   onMapClickCoordinates,
@@ -55,6 +57,7 @@ export const MapView: React.FC<MapViewProps> = ({
   const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   // Layer Refs untuk masing-masing dataset spasial
+  const adminBoundariesCasingLayerRef = useRef<L.GeoJSON | null>(null);
   const adminBoundariesLayerRef = useRef<L.GeoJSON | null>(null);
   const geoJsonLayerRef = useRef<L.GeoJSON | null>(null);
   const kecamatanLabelsLayerRef = useRef<L.LayerGroup | null>(null);
@@ -66,6 +69,7 @@ export const MapView: React.FC<MapViewProps> = ({
   const surveyMarkersLayerRef = useRef<L.LayerGroup | null>(null);
   const userLocationLayerRef = useRef<L.LayerGroup | null>(null);
   const pickedMarkerLayerRef = useRef<L.LayerGroup | null>(null);
+  const inspectMarkerLayerRef = useRef<L.LayerGroup | null>(null);
 
   // Sync ref agar callback Leaflet membaca state terkini (mencegah stale closure)
   const isPickingManualLocationRef = useRef(isPickingManualLocation);
@@ -173,6 +177,7 @@ export const MapView: React.FC<MapViewProps> = ({
     surveyMarkersLayerRef.current = L.layerGroup().addTo(map);
     userLocationLayerRef.current = L.layerGroup().addTo(map);
     pickedMarkerLayerRef.current = L.layerGroup().addTo(map);
+    inspectMarkerLayerRef.current = L.layerGroup().addTo(map);
 
     map.on('click', (e: L.LeafletMouseEvent) => {
       const lat = e.latlng.lat;
@@ -269,37 +274,73 @@ export const MapView: React.FC<MapViewProps> = ({
   }, [activeBasemap]);
 
   // =========================================================================
-  // 4. LAYER OVERLAY 1: BATAS ADMINISTRASI KECAMATAN (HANYA OUTLINE, NO FILL)
+  // 4. LAYER OVERLAY 1: BATAS ADMINISTRASI KECAMATAN (SERAGAM + LABEL KECAMATAN)
   // =========================================================================
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
+    if (adminBoundariesCasingLayerRef.current) {
+      map.removeLayer(adminBoundariesCasingLayerRef.current);
+      adminBoundariesCasingLayerRef.current = null;
+    }
     if (adminBoundariesLayerRef.current) {
       map.removeLayer(adminBoundariesLayerRef.current);
       adminBoundariesLayerRef.current = null;
+    }
+    if (kecamatanLabelsLayerRef.current) {
+      kecamatanLabelsLayerRef.current.clearLayers();
     }
 
     const isActive = isLayerActive('batas_desa');
     if (!isActive || !adminBoundariesData) return;
 
-    // Batas Administrasi: Outline tajam kontras tinggi di pane teratas (adminBoundaryPane)
-    // Tanpa fill (fill: false) agar layer tematik, citra satelit, dan jalan di bawahnya tetap terlihat
+    // 1) Garis putih tipis di bawah (mask/halo casing) agar garis batas selalu terbaca di atas semua layer
+    const casingLayer = L.geoJSON(adminBoundariesData, {
+      pane: 'adminBoundaryPane',
+      style: () => ({
+        fill: false,
+        fillOpacity: 0,
+        color: '#ffffff',
+        weight: 3.8,
+        opacity: 0.9,
+        interactive: false,
+      }),
+    }).addTo(map);
+    adminBoundariesCasingLayerRef.current = casingLayer;
+
+    // 2) Garis utama hitam putus-putus seragam di semua kondisi (tanpa fill) + label nama kecamatan
     const layer = L.geoJSON(adminBoundariesData, {
       pane: 'adminBoundaryPane',
       style: () => ({
         fill: false,
         fillOpacity: 0,
-        color: isDarkMode ? '#f8fafc' : '#0f172a',
-        weight: 2.2,
+        color: '#0f172a',
+        weight: 2.0,
         dashArray: '6, 4',
         opacity: 0.95,
         interactive: false, // Tidak mengganggu klik poligon tematik di bawahnya
       }),
+      onEachFeature: (feature) => {
+        const kec = feature?.properties?.KECAMATAN;
+        if (!kec || !kecamatanLabelsLayerRef.current) return;
+        const isSelected = selectedKecamatan && kec.toUpperCase() === selectedKecamatan.toUpperCase();
+        const labelLatLng = getPolygonLabelLatLng(feature);
+        if (labelLatLng) {
+          const tooltip = L.tooltip({
+            permanent: true,
+            direction: 'center',
+            className: isSelected ? 'kecamatan-map-label active-label' : 'kecamatan-map-label',
+          })
+            .setLatLng(labelLatLng)
+            .setContent(kec);
+          kecamatanLabelsLayerRef.current.addLayer(tooltip);
+        }
+      },
     }).addTo(map);
 
     adminBoundariesLayerRef.current = layer;
-  }, [adminBoundariesData, layers, isDarkMode]);
+  }, [adminBoundariesData, layers, selectedKecamatan]);
 
   // =========================================================================
   // 5. LAYER TEMATIK: PETA REKOMENDASI PEMUPUKAN PADI (KECAMATAN)
@@ -311,9 +352,6 @@ export const MapView: React.FC<MapViewProps> = ({
     if (geoJsonLayerRef.current) {
       map.removeLayer(geoJsonLayerRef.current);
       geoJsonLayerRef.current = null;
-    }
-    if (kecamatanLabelsLayerRef.current) {
-      kecamatanLabelsLayerRef.current.clearLayers();
     }
 
     const isActive = isLayerActive('inasoilagro');
@@ -348,20 +386,6 @@ export const MapView: React.FC<MapViewProps> = ({
       onEachFeature: (feature, polyLayer) => {
         const props = feature.properties || {};
         const kec = props.KECAMATAN || 'Kecamatan';
-        const isSelected = selectedKecamatan && kec.toUpperCase() === selectedKecamatan.toUpperCase();
-
-        // Hitung titik centroid / interior poligon agar label selalu berada tepat di dalam poligon
-        const labelLatLng = getPolygonLabelLatLng(feature);
-        if (labelLatLng && kecamatanLabelsLayerRef.current) {
-          const tooltip = L.tooltip({
-            permanent: true,
-            direction: 'center',
-            className: isSelected ? 'kecamatan-map-label active-label' : 'kecamatan-map-label',
-          })
-            .setLatLng(labelLatLng)
-            .setContent(kec);
-          kecamatanLabelsLayerRef.current.addLayer(tooltip);
-        }
 
         polyLayer.on('click', (e: L.LeafletMouseEvent) => {
           L.DomEvent.stopPropagation(e);
@@ -634,6 +658,32 @@ export const MapView: React.FC<MapViewProps> = ({
       L.marker(pickedLocation, { icon: pickIcon }).addTo(pickedGroup);
     }
   }, [pickedLocation]);
+
+  // Penanda sementara saat pengguna mengetuk peta untuk melihat informasi poligon
+  useEffect(() => {
+    const inspectGroup = inspectMarkerLayerRef.current;
+    if (!inspectGroup) return;
+
+    inspectGroup.clearLayers();
+
+    if (inspectLocation) {
+      const inspectIcon = L.divIcon({
+        className: 'inspect-tap-marker',
+        html: `
+          <div class="relative flex flex-col items-center pointer-events-none">
+            <div class="w-7 h-7 rounded-full bg-blue-600 text-white shadow-xl border-2 border-white flex items-center justify-center">
+              <div class="w-2.5 h-2.5 rounded-full bg-white"></div>
+            </div>
+            <div class="w-0.5 h-2.5 bg-blue-700"></div>
+          </div>
+        `,
+        iconSize: [28, 38],
+        iconAnchor: [14, 38],
+      });
+
+      L.marker(inspectLocation, { icon: inspectIcon, interactive: false }).addTo(inspectGroup);
+    }
+  }, [inspectLocation]);
 
   useEffect(() => {
     const surveyGroup = surveyMarkersLayerRef.current;

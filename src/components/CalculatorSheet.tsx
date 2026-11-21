@@ -483,7 +483,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                   }`}
                 >
                   <span>PUTS (Uji Sawah)</span>
-                  <span className="text-[9.5px] opacity-85 font-normal">Bagan Warna Uji Sawah</span>
+                  <span className="text-[9.5px] opacity-85 font-normal">Perangkat Uji Tanah Sawah</span>
                 </button>
               </div>
             ) : (
@@ -522,7 +522,7 @@ export const CalculatorSheet: React.FC<CalculatorSheetProps> = ({
                 >
                   <span>Metode Kualitatif</span>
                   <span className="text-[9.5px] font-semibold opacity-85">
-                    ({jenisPadi === 'sawah' ? (metode === 'permentan' ? 'Bagan Warna / Permentan' : 'PUTS') : 'PUTK'} Bagan Warna)
+                    ({jenisPadi === 'sawah' ? (metode === 'permentan' ? 'Permentan 13/2022' : 'Perangkat Uji Tanah Sawah') : 'Perangkat Uji Tanah Kering'})
                   </span>
                 </button>
                 <button
