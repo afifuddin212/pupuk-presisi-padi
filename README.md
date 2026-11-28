@@ -13,7 +13,8 @@ Aplikasi ini dikembangkan mengacu pada standar resmi **Peraturan Menteri Pertani
 ---
 
 ## 📌 Tautan & Dokumen Acuan Resmi
-* **Live Demo Aplikasi (GitHub Pages)**: [https://afifuddin212.github.io/pupuk-pas-padi/](https://afifuddin212.github.io/pupuk-pas-padi/)
+* **Live Demo Utama (Cloudflare Pages)**: [https://pupuk-pas-padi.pages.dev](https://pupuk-pas-padi.pages.dev)
+* **Live Demo Mirror (GitHub Pages)**: [https://afifuddin212.github.io/pupuk-pas-padi/](https://afifuddin212.github.io/pupuk-pas-padi/)
 * **Repositori GitHub**: [https://github.com/afifuddin212/pupuk-pas-padi](https://github.com/afifuddin212/pupuk-pas-padi)
 * **Dokumen Master Arsitektur**: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 * **Dokumen Acuan Terpadu**: [rekomendasi_pemupukan_presisi_padi_terpadu.md](rekomendasi_pemupukan_presisi_padi_terpadu.md)

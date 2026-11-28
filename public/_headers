@@ -1,0 +1,6 @@
+/base-data/*.geojson
+  Content-Type: application/geo+json; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+/logo/*
+  Cache-Control: public, max-age=86400
