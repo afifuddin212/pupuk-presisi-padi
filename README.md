@@ -2,7 +2,8 @@
 
 [![Deploy Web Demo to GitHub Pages](https://github.com/afifuddin212/pupuk-pas-padi/actions/workflows/deploy.yml/badge.svg)](https://github.com/afifuddin212/pupuk-pas-padi/actions/workflows/deploy.yml)
 [![Build Android APK & AAB](https://github.com/afifuddin212/pupuk-pas-padi/actions/workflows/build-apk.yml/badge.svg)](https://github.com/afifuddin212/pupuk-pas-padi/actions/workflows/build-apk.yml)
-[![Live Demo](https://img.shields.io/badge/Demo-GitHub%20Pages-emerald?style=flat&logo=github)](https://afifuddin212.github.io/pupuk-pas-padi/)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Pages-Live-F38020?style=flat&logo=cloudflare&logoColor=white)](https://pupuk-pas-padi.pages.dev/)
+[![Live Demo](https://img.shields.io/badge/Mirror-GitHub%20Pages-emerald?style=flat&logo=github)](https://afifuddin212.github.io/pupuk-pas-padi/)
 [![Regulation](https://img.shields.io/badge/Dasar%20Regulasi-Permentan%20No.%2013%2F2022-amber)](rekomendasi_pemupukan_presisi_padi_terpadu.md)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
