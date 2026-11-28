@@ -1,8 +1,8 @@
-# 🌾 Rekomendasi Pemupukan Presisi Padi (Kabupaten Lampung Utara)
+# 🌾 Pupuk Pas Padi (Kabupaten Lampung Utara)
 
-[![Deploy Web Demo to GitHub Pages](https://github.com/afifuddin212/pupuk-presisi-padi/actions/workflows/deploy.yml/badge.svg)](https://github.com/afifuddin212/pupuk-presisi-padi/actions/workflows/deploy.yml)
-[![Build Android APK & AAB](https://github.com/afifuddin212/pupuk-presisi-padi/actions/workflows/build-apk.yml/badge.svg)](https://github.com/afifuddin212/pupuk-presisi-padi/actions/workflows/build-apk.yml)
-[![Live Demo](https://img.shields.io/badge/Demo-GitHub%20Pages-emerald?style=flat&logo=github)](https://afifuddin212.github.io/pupuk-presisi-padi/)
+[![Deploy Web Demo to GitHub Pages](https://github.com/afifuddin212/pupuk-pas-padi/actions/workflows/deploy.yml/badge.svg)](https://github.com/afifuddin212/pupuk-pas-padi/actions/workflows/deploy.yml)
+[![Build Android APK & AAB](https://github.com/afifuddin212/pupuk-pas-padi/actions/workflows/build-apk.yml/badge.svg)](https://github.com/afifuddin212/pupuk-pas-padi/actions/workflows/build-apk.yml)
+[![Live Demo](https://img.shields.io/badge/Demo-GitHub%20Pages-emerald?style=flat&logo=github)](https://afifuddin212.github.io/pupuk-pas-padi/)
 [![Regulation](https://img.shields.io/badge/Dasar%20Regulasi-Permentan%20No.%2013%2F2022-amber)](rekomendasi_pemupukan_presisi_padi_terpadu.md)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -13,8 +13,8 @@ Aplikasi ini dikembangkan mengacu pada standar resmi **Peraturan Menteri Pertani
 ---
 
 ## 📌 Tautan & Dokumen Acuan Resmi
-* **Live Demo Aplikasi (GitHub Pages)**: [https://afifuddin212.github.io/pupuk-presisi-padi/](https://afifuddin212.github.io/pupuk-presisi-padi/)
-* **Repositori GitHub**: [https://github.com/afifuddin212/pupuk-presisi-padi](https://github.com/afifuddin212/pupuk-presisi-padi)
+* **Live Demo Aplikasi (GitHub Pages)**: [https://afifuddin212.github.io/pupuk-pas-padi/](https://afifuddin212.github.io/pupuk-pas-padi/)
+* **Repositori GitHub**: [https://github.com/afifuddin212/pupuk-pas-padi](https://github.com/afifuddin212/pupuk-pas-padi)
 * **Dokumen Master Arsitektur**: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 * **Dokumen Acuan Terpadu**: [rekomendasi_pemupukan_presisi_padi_terpadu.md](rekomendasi_pemupukan_presisi_padi_terpadu.md)
 * **Tabel Baku Per-Kecamatan**: [rekomendasi-pemupukan-kecamatan-permentan13_2022.md](rekomendasi-pemupukan-kecamatan-permentan13_2022.md)
@@ -93,12 +93,12 @@ Selain itu, aplikasi dilengkapi **Legenda Mengambang Dinamis (*Floating Mini-Leg
 
 Aplikasi ini dapat diunduh langsung dalam bentuk **file APK mandiri** tanpa harus menginstal lewat Google Play Store:
 
-1. Buka tab **[Actions](https://github.com/afifuddin212/pupuk-presisi-padi/actions)** di repositori GitHub ini.
+1. Buka tab **[Actions](https://github.com/afifuddin212/pupuk-pas-padi/actions)** di repositori GitHub ini.
 2. Pilih workflow **Build Android APK & AAB Bundle**.
 3. Klik proses build terbaru yang berhasil (tanda centang hijau ✅).
 4. Pada bagian **Artifacts** di bagian bawah halaman:
-   - **`pupuk-presisi-padi-debug-apk`**: Berisi file `app-debug.apk`. Unduh dan kirimkan ke ponsel Android petugas lapang/petani untuk langsung diinstal (*sideload*).
-   - **`pupuk-presisi-padi-playstore-aab`**: Berisi file `app-release.aab` siap unggah ke Google Play Console.
+   - **`pupuk-pas-padi-debug-apk`**: Berisi file `app-debug.apk`. Unduh dan kirimkan ke ponsel Android petugas lapang/petani untuk langsung diinstal (*sideload*).
+   - **`pupuk-pas-padi-playstore-aab`**: Berisi file `app-release.aab` siap unggah ke Google Play Console.
 5. Panduan lengkap publikasi ke Google Play Store dapat dibaca di **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#8-panduan-lengkap-unggah--rilis-ke-google-play-store)**.
 
 ---
@@ -107,8 +107,8 @@ Aplikasi ini dapat diunduh langsung dalam bentuk **file APK mandiri** tanpa haru
 
 ```powershell
 # 1. Clone repositori
-git clone https://github.com/afifuddin212/pupuk-presisi-padi.git
-cd pupuk-presisi-padi
+git clone https://github.com/afifuddin212/pupuk-pas-padi.git
+cd pupuk-pas-padi
 
 # 2. Instal dependensi
 npm.cmd install

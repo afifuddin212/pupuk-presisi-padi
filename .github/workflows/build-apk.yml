@@ -86,7 +86,7 @@ jobs:
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: pupuk-presisi-padi-debug-apk
+          name: pupuk-pas-padi-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
@@ -94,7 +94,7 @@ jobs:
       - name: Upload Release AAB (Google Play Store)
         uses: actions/upload-artifact@v4
         with:
-          name: pupuk-presisi-padi-playstore-aab
+          name: pupuk-pas-padi-playstore-aab
           path: android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
